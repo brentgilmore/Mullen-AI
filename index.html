@@ -1536,7 +1536,7 @@
       const note = DELTA_NOTES[r.g];
       return `
         <tr class="border-t ${note ? 'cursor-pointer row' : ''}" style="border-color: var(--rule);" ${note ? `onclick="toggleDeltaNote(this)"` : ''}>
-          <td class="px-4 md:px-5 py-3"><div class="font-medium flex items-center gap-2">${r.g}${note ? `<span class="badge b-amber">why?</span>` : ''}</div>
+          <td class="px-4 md:px-5 py-3"><div class="font-medium flex items-center gap-2">${r.g}${note ? `<span class="badge b-amber">Need to review</span>` : ''}</div>
             ${note ? `<div class="delta-note hidden text-[13px] mt-2 leading-[1.5] max-w-[560px]" style="color: var(--ink-2);">${note}</div>` : ''}</td>
           <td class="px-4 md:px-5 py-3 text-right mono text-[13.5px]">${usd(r.shepley)}</td>
           <td class="px-4 md:px-5 py-3 text-right mono text-[13.5px] hidden sm:table-cell">${usd0(r.ai)}</td>
@@ -1545,7 +1545,7 @@
     };
     return `
       <p class="text-[16px] leading-[1.6] mb-5 max-w-[860px]" style="color: var(--ink-2);">
-        Shepley's frame quote <span class="mono text-[14px]">0002860097</span> came back at <strong style="color: var(--ink);">${usd(shepSub)}</strong> before tax. Here it is next to the estimate, group by group, so you can see where they differ. Tap a flagged group to see why.
+        Shepley's frame quote <span class="mono text-[14px]">0002860097</span> came back at <strong style="color: var(--ink);">${usd(shepSub)}</strong> before tax. Here it is next to the estimate, group by group, so you can see where they differ. Tap a group marked "Need to review" to see why.
       </p>
       <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
         <table class="w-full text-[14.5px]">
