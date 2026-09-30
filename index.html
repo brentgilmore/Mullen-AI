@@ -474,7 +474,7 @@
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
                   <span>Review &amp; send to Shepley</span>
                 </button>
-                <button onclick="openScopeApp('saidnawey')" class="pressable btn-secondary text-[15px] font-medium px-5 py-2.5 rounded-full">Start sub scopes too</button>
+
               </div>
             </div>
           </div>
@@ -884,7 +884,7 @@
     { level: 'red',   title: 'Windows aren\'t in either quote', body: 'Sheet 4 calls for Andersen 400 Series units (window schedule A–K on sheet 3), but Shepley\'s frame quote and ext-door quote #2859245 don\'t include windows. Ask for a window quote now. Andersen lead times are running 6–8 weeks.', action: 'Draft window request' },
     { level: 'red',   title: 'Rail kit fails the stair handrail requirement', body: 'Shepley\'s own note on the INTEX Hampton rail kit says it "does not meet graspable stair handrail req." The rear stairs and balcony stairs need a graspable handrail (780 CMR R311.7.8). Add a 1-1/2" round handrail line.', action: 'Add handrail line' },
     { level: 'amber', title: 'Shingle colors still TBD', body: 'Landmark Pro field shingles and Shadow Ridge hip & ridge both say "COLOR TO BE DETERMINED." Confirm with the Saidnaweys before the order is released.', action: 'Ask the client' },
-    { level: 'amber', title: '55 SF of metal roofing is "done by others"', body: 'This isn\'t priced anywhere yet. It\'s probably the porch roof on sheet 4. It needs a sub price, so I added it to the Saidnawey roofing scope.', action: 'Open roofing scope' },
+    { level: 'amber', title: '55 SF of metal roofing is "done by others"', body: 'This isn\'t priced anywhere yet. It\'s probably the porch roof on sheet 4. It needs a price from your roofer.', action: 'Ask Tidewater for a price' },
     { level: 'amber', title: 'Porch brackets not priced', body: '2 × "Bracket TBD, not priced, done by others" (the entry hood on sheet 4). Pick a style or have the trim carpenter make them.', action: 'Note for trim sub' },
     { level: 'muted', title: 'Quote expires Oct 4', body: 'Close date on quote 0002860097 is 10/04/26 (30 days from activation). Lumber pricing moves, so lock it in or ask Team Pina to extend.', action: 'Remind me Oct 1' },
   ];
@@ -948,7 +948,7 @@
       id: 'whitcomb', job: 'Whitcomb Addition', client: 'James & Laura Whitcomb', addr: '14 Eel River Rd, Osterville',
       summary: '16×24 1.5-story primary suite off the rear of a 1962 Cape. Full bath, walk-in closet, mini-split, and a shed dormer to match the existing house.',
       source: 'Doug\'s voice memo (Sep 12) + 5-sheet sketch set + 38 site photos',
-      due: 'Bids due Oct 3', created: 'Sep 15', shepley: 'waiting', shepleyLabel: 'Waiting · day 10', sentOn: 'Sep 15',
+      due: 'Bids due Oct 3', created: 'Sep 15', cameFrom: "Doug's voice memo", sentOn: 'Sep 15',
       trades: [
         { t: 'Excavation & foundation', sub: 'Barnstable Site Works', prefilled: 14, total: 16, status: 'bid',    bid: 18400, when: 'Sep 19' },
         { t: 'Framing',                 sub: 'Mullen crew (in-house)', prefilled: 19, total: 19, status: 'inhouse', bid: null, when: '—' },
@@ -965,7 +965,7 @@
       id: 'coleman', job: 'Coleman Kitchen + Mudroom', client: 'Rachel Coleman', addr: '9 Old Post Rd, Cotuit',
       summary: 'Full kitchen gut and an 8×12 mudroom bump-out on sonotubes. Moving the range to the island needs a new gas line and a downdraft.',
       source: 'Cape Design Studio Rev 2 plans + walkthrough notes',
-      due: 'Bids due Oct 1', created: 'Sep 22', shepley: 'waiting', shepleyLabel: 'Waiting · day 3', sentOn: 'Sep 22',
+      due: 'Bids due Oct 1', created: 'Sep 22', cameFrom: "Architect's plans", sentOn: 'Sep 22',
       trades: [
         { t: 'Electrical', sub: 'Crocker Electric', prefilled: 15, total: 17, status: 'bid', bid: 8900, when: 'Sep 24' },
         { t: 'Plumbing & gas', sub: 'Nauset Plumbing & Heating', prefilled: 12, total: 14, status: 'viewed', bid: null, when: 'Viewed yesterday' },
@@ -975,24 +975,28 @@
       ],
     },
     {
-      id: 'saidnawey', job: 'Saidnawey Residence', client: 'Saidnawey family', addr: '33 Hedge Row, West Yarmouth',
-      summary: 'New 3-story gambrel home with a finished basement, 4.5 baths, roof deck, covered porch and balcony. Built from the ArchiPlicity progress set.',
-      source: 'ArchiPlicity progress set (8/18) + Shepley quote 0002860097 (Sep 4)',
-      due: 'Ready for you to review', created: 'Sep 5', shepley: 'back', shepleyLabel: 'Back · Sep 4',
-      fromShepley: [
-        ['55 sf metal roof', 'Shepley marked it "done by others", so it went to Tidewater Roofing'],
-        ['2 porch brackets', 'Not priced by Shepley; noted for your crew on the trim work'],
-        ['Andersen 400 windows (A–K)', 'Not in either Shepley quote; window quote request drafted'],
-        ['Framing, trim & siding', 'Materials are on Shepley\'s quote, so your crew\'s labor is all that\'s left'],
-      ],
+      id: 'liu', job: 'Liu Garage Addition', client: 'Karen & David Liu', addr: '41 Old County Rd, Sandwich',
+      summary: 'Second-floor addition over the existing 2-car garage: bedroom suite with a full bath and a bonus room. New stairs from the mudroom, and the roof raised to match the house.',
+      source: 'Website chat (Sat) + Doug\'s site visit notes (Mon) + 22 photos',
+      due: 'Ready for you to review', created: 'Today', cameFrom: 'Website chat',
+      notes: {
+        title: 'From your site visit',
+        items: [
+          ['Garage footings', 'Need an engineer to confirm they can carry a second floor, so a structural engineer is on the list'],
+          ['Electrical', 'Existing 100A panel; Crocker is asked to price a 200A upgrade too'],
+          ['Roof', 'Match the existing Landmark shingles in Weathered Wood (photo #8)'],
+          ['Timing', 'The Lius want it done by June, so bids are due in 7 days'],
+        ],
+      },
       trades: [
-        { t: 'Excavation & foundation', sub: 'Barnstable Site Works', prefilled: 15, total: 17, status: 'draft', bid: null, when: 'Draft' },
-        { t: 'Roofing (incl. 55 sf metal)', sub: 'Tidewater Roofing', prefilled: 13, total: 15, status: 'draft', bid: null, when: 'Draft' },
-        { t: 'Electrical', sub: 'Crocker Electric', prefilled: 22, total: 26, status: 'draft', bid: null, when: 'Draft' },
-        { t: 'Plumbing', sub: 'Nauset Plumbing & Heating', prefilled: 20, total: 24, status: 'draft', bid: null, when: 'Draft' },
-        { t: 'HVAC', sub: 'Sandwich Mechanical', prefilled: 14, total: 18, status: 'draft', bid: null, when: 'Draft' },
-        { t: 'Insulation', sub: 'Bayside Insulation', prefilled: 11, total: 12, status: 'draft', bid: null, when: 'Draft' },
-        { t: 'Siding install', sub: 'Mullen crew (in-house)', prefilled: 12, total: 12, status: 'inhouse', bid: null, when: '—' },
+        { t: 'Structural engineer', sub: 'Cape Structural Engineering', prefilled: 6, total: 8, status: 'draft' },
+        { t: 'Framing', sub: 'Mullen crew (in-house)', prefilled: 18, total: 18, status: 'inhouse' },
+        { t: 'Roofing', sub: 'Tidewater Roofing', prefilled: 12, total: 14, status: 'draft' },
+        { t: 'Electrical', sub: 'Crocker Electric', prefilled: 16, total: 19, status: 'draft' },
+        { t: 'Plumbing', sub: 'Nauset Plumbing & Heating', prefilled: 14, total: 17, status: 'draft' },
+        { t: 'HVAC (mini-split)', sub: 'Sandwich Mechanical', prefilled: 10, total: 12, status: 'draft' },
+        { t: 'Insulation', sub: 'Bayside Insulation', prefilled: 9, total: 10, status: 'draft' },
+        { t: 'Drywall', sub: 'Mashpee Drywall', prefilled: 10, total: 11, status: 'draft' },
       ],
     },
   ];
@@ -1397,7 +1401,6 @@
           <div class="shrink-0">${qrStatusBadge(q)}</div>
         </div>
         <div class="text-[14px] mb-6 [&_strong]:text-[var(--ink)] [&_strong]:font-semibold" style="color: var(--ink-2);">${timeline}</div>
-        ${q.status === 'received' && SCOPES.find(j => j.id === q.id) ? `<button onclick="openScopeApp('${q.id}')" class="pressable w-full md:w-auto mb-6 rounded-[14px] px-5 py-3.5 text-left flex items-center gap-3" style="background: var(--green-soft); color: #173F29;"><span class="text-[15px]"><strong>Next step:</strong> scopes are ready for ${subTrades(SCOPES.find(j => j.id === q.id)).length} subs. Review and send</span><span>${ICON.chevron}</span></button>` : ''}
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-7">
           ${statCard('Estimate', usd0(q.aiTotal), 'materials before tax')}
@@ -1539,7 +1542,7 @@
   }
   function flagAction(i) {
     const f = SAIDNAWEY_FLAGS[i];
-    if (f.action === 'Open roofing scope') return openScopeApp('saidnawey');
+    if (f.action === 'Ask Tidewater for a price') return showToast('Price request for 55 sf of metal roofing sent to Tidewater Roofing');
     const msgs = {
       'Draft window request': 'Window quote request drafted to Team Pina (schedule A–K attached)',
       'Add handrail line': 'Added: 1-1/2" graspable handrail, 2 runs, to the rear stairs',
@@ -1568,7 +1571,6 @@
     if (!v) return;
     if (qrState.view === 'detail') {
       const q = QUOTE_REQUESTS.find(x => x.id === qrState.id);
-      if (/sub|scope/.test(v) && SCOPES.find(j => j.id === q.id)) return openScopeApp(q.id);
       if (/flag|miss|wrong|problem/.test(v) && q.id === 'saidnawey') return setQrTab('flags');
       if (/compare|differ|estimate/.test(v) && q.status === 'received') return setQrTab('compare');
       if (/follow|nudge|remind|email|pina/.test(v)) return showToast('Follow-up drafted to Team Pina');
@@ -1585,7 +1587,7 @@
   // App: Scope agent
   // =====================================================================
   // Scope Agent: a list of jobs (same format as Shepley Quote Requests).
-  // When Shepley sends a quote back, the job's scopes are split out and ready to review and send.
+  // A customer asks for a project (like an addition); the agent writes a scope for each trade and gets it ready to send.
   let scopeView = 'list', scopeJobId = 'whitcomb', scopeBuilding = false;
   const scopeSent = {};    // jobId → { tradeIndex: { state: 'sent' | 'viewed' | 'bid', bid } }
   const scopeChecked = {}; // jobId → Set of trade indexes to send to
@@ -1611,10 +1613,8 @@
   function scopeBack() { if (scopeView === 'detail' && !scopeBuilding) { scopeView = 'list'; renderScope(); } else closeApps(); }
   function focusScopeChat() { scopeView = 'list'; renderScope(); setTimeout(() => $('scope-chat-input').focus(), 50); }
 
-  function scopeShepleyBadge(j) {
-    if (j.shepley === 'back') return `<span class="badge b-green">${j.shepleyLabel}</span>`;
-    if (j.shepley === 'waiting') return `<span class="badge b-amber">${j.shepleyLabel}</span>`;
-    return `<span class="badge b-muted">${j.shepleyLabel || 'Not needed'}</span>`;
+  function scopeSourceBadge(j) {
+    return `<span class="text-[14px]" style="color: var(--ink-2);">${j.cameFrom || '—'}</span>`;
   }
   function scopeStatus(j) {
     const sent = sentFor(j), n = subTrades(j).length, out = Object.keys(sent).length;
@@ -1633,27 +1633,27 @@
     if (scopeView === 'detail') return renderScopeJob();
     const ready = SCOPES.filter(j => !Object.keys(sentFor(j)).length);
     const out = SCOPES.filter(j => Object.keys(sentFor(j)).length);
-    const said = SCOPES.find(j => j.id === 'saidnawey');
+    const fresh = ready[0];
     $('scope-body').innerHTML = `
       <div class="max-w-[1200px] mx-auto">
         <div class="mb-5">
           <div class="text-[24px] font-semibold leading-tight">Scope Agent</div>
-          <div class="text-[14px] mt-1 leading-[1.55] max-w-[780px]" style="color: var(--ink-2);"><span style="color: var(--ink); font-weight: 600;">What it does:</span> When Shepley sends a quote back, it splits out the work each sub needs to price, fills in their scope from the plans and the quote, and gets it ready for you to send. Subs just add a price.</div>
+          <div class="text-[14px] mt-1 leading-[1.55] max-w-[780px]" style="color: var(--ink-2);"><span style="color: var(--ink); font-weight: 600;">What it does:</span> When a customer asks for a project, like an addition, it writes a scope for every trade from your notes, photos and standard specs, and sends each sub their own. Subs just add a price.</div>
         </div>
         <p class="mb-8 max-w-[880px] text-[18px] md:text-[19px] leading-[1.65]" style="color: var(--ink-2);">
-          ${said && !Object.keys(sentFor(said)).length ? `Shepley sent back the <span class="num filter-link" onclick="openScopeApp('saidnawey')">Saidnawey</span> quote, so I split out the work for <span class="num">${subTrades(said).length} subs</span>. It's ready for you to review and send.` : `All scopes are out.`}
+          ${fresh ? `A new request came in: the <span class="num filter-link" onclick="openScopeApp('${fresh.id}')">${fresh.job}</span>${fresh.cameFrom ? ' (' + fresh.cameFrom.toLowerCase() + ')' : ''}. I wrote scopes for <span class="num">${subTrades(fresh).length} subs</span>. They're ready for you to review and send.` : `All scopes are out.`}
           <span class="block mt-3">${out.map(j => { const st = scopeStatus(j); return `<strong style="color: var(--ink);">${j.job.split(' ')[0]}</strong>: ${st.bids.split(' · ')[0]} bids in`; }).join(' · ')}.</span>
         </p>
         <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
           <table class="w-full text-[15px] hidden md:table">
             <thead><tr class="border-b text-[13px] font-medium" style="border-color: var(--rule); color: var(--ink-muted);">
-              <th class="text-left px-5 py-3.5">Job</th><th class="text-left px-5 py-3.5">Scope</th><th class="text-left px-5 py-3.5">Shepley</th><th class="text-left px-5 py-3.5">Subs</th><th class="text-left px-5 py-3.5">Status</th><th class="text-right px-5 py-3.5">Bids in</th>
+              <th class="text-left px-5 py-3.5">Job</th><th class="text-left px-5 py-3.5">Scope</th><th class="text-left px-5 py-3.5">Came in from</th><th class="text-left px-5 py-3.5">Subs</th><th class="text-left px-5 py-3.5">Status</th><th class="text-right px-5 py-3.5">Bids in</th>
             </tr></thead>
             <tbody>${[...ready, ...out].map(j => { const st = scopeStatus(j); return `
               <tr data-scope="${j.id}" class="row border-t cursor-pointer" style="border-color: var(--rule);" onclick="openScopeApp('${j.id}')">
                 <td class="px-5 py-4"><div class="font-medium">${j.job}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${j.addr}</div></td>
                 <td class="px-5 py-4 text-[14px] max-w-[340px]"><div class="line-clamp-2">${j.summary}</div></td>
-                <td class="px-5 py-4">${scopeShepleyBadge(j)}</td>
+                <td class="px-5 py-4">${scopeSourceBadge(j)}</td>
                 <td class="px-5 py-4 text-[14px]">${subTrades(j).length}</td>
                 <td class="px-5 py-4">${st.badge}</td>
                 <td class="px-5 py-4 text-right mono text-[13.5px]">${st.bids}</td>
@@ -1662,7 +1662,7 @@
           <div class="md:hidden">${[...ready, ...out].map((j, i) => { const st = scopeStatus(j); return `
             <div data-scope="${j.id}" class="px-4 py-4 cursor-pointer ${i ? 'border-t' : ''}" style="border-color: var(--rule);" onclick="openScopeApp('${j.id}')">
               <div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-medium">${j.job}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${j.addr}</div></div>${st.badge}</div>
-              <div class="text-[13px] mt-2 mono" style="color: var(--ink-muted);">Shepley: ${j.shepleyLabel} · ${subTrades(j).length} subs · bids ${st.bids}</div>
+              <div class="text-[13px] mt-2 mono" style="color: var(--ink-muted);">${j.cameFrom || ''} · ${subTrades(j).length} subs · bids ${st.bids}</div>
             </div>`; }).join('')}</div>
         </div>
       </div>`;
@@ -1690,17 +1690,17 @@
             <div class="text-[24px] font-semibold leading-tight">${job.job}</div>
             <div class="text-[14px] mt-1" style="color: var(--ink-muted);">${job.client} · ${job.addr}</div>
           </div>
-          <div class="shrink-0 flex items-center gap-2">${job.shepleyLabel ? `<span class="text-[12.5px]" style="color: var(--ink-muted);">Shepley</span>${scopeShepleyBadge(job)}` : ''}</div>
+          <div class="shrink-0 flex items-center gap-2">${job.cameFrom ? `<span class="text-[12.5px]" style="color: var(--ink-muted);">Came in from</span><span class="badge b-muted">${job.cameFrom}</span>` : ''}</div>
         </div>
 
         <div class="section-label mb-2">1 · The job</div>
         <div class="rounded-[16px] border p-5 md:p-6" style="border-color: var(--rule); background: var(--surface);">
           <p class="text-[16px] leading-[1.6]">${job.summary}</p>
           <div class="flex flex-wrap gap-2 mt-4">${job.source.split(' + ').map(x => `<span class="text-[12.5px] px-3 py-1 rounded-full" style="background: var(--hover); color: var(--ink-2);">${x}</span>`).join('')}</div>
-          ${job.fromShepley ? `
+          ${job.notes ? `
           <div class="mt-5 rounded-[12px] p-4" style="background: var(--green-soft);">
-            <div class="text-[14px] font-semibold" style="color: #173F29;">From Shepley's quote</div>
-            <div class="mt-2 space-y-1.5">${job.fromShepley.map(([k, v]) => `<div class="flex gap-2 text-[14px] leading-[1.5]" style="color: #1E4A33;"><span class="mt-[3px] shrink-0">${ICON.check}</span><div><strong style="font-weight: 600;">${k}:</strong> ${v}</div></div>`).join('')}</div>
+            <div class="text-[14px] font-semibold" style="color: #173F29;">${job.notes.title}</div>
+            <div class="mt-2 space-y-1.5">${job.notes.items.map(([k, v]) => `<div class="flex gap-2 text-[14px] leading-[1.5]" style="color: #1E4A33;"><span class="mt-[3px] shrink-0">${ICON.check}</span><div><strong style="font-weight: 600;">${k}:</strong> ${v}</div></div>`).join('')}</div>
           </div>` : ''}
         </div>
 
@@ -1804,7 +1804,7 @@
       SCOPES.unshift({
         id: 'lindqvist', job: 'Lindqvist Sunroom', client: 'Erik & Anna Lindqvist', addr: '62 Putnam Ave, Cotuit',
         summary: '14×20 sunroom off the kitchen on piers. Cathedral ceiling, 3 skylights, ties into the existing hip roof, electric radiant floor. Done by Memorial Day.',
-        source: 'Your description + 4 past sunroom jobs', due: 'Ready for you to review', created: 'Today', shepleyLabel: 'Not requested yet',
+        source: 'Your description + 4 past sunroom jobs', due: 'Ready for you to review', created: 'Today', cameFrom: 'Your description',
         trades: [
           { t: 'Foundation (helical piers)', sub: 'Barnstable Site Works', prefilled: 12, total: 14, status: 'draft' },
           { t: 'Framing', sub: 'Mullen crew (in-house)', prefilled: 16, total: 16, status: 'inhouse' },
@@ -2247,10 +2247,10 @@
     if (tourStep === 1 && e.target.closest('[data-wf="scope"]')) {
       tourStep = 2; hideTooltip();
       setTimeout(() => {
-        const rows = [...document.querySelectorAll('[data-scope="saidnawey"]')].filter(el => el.getBoundingClientRect().width > 0);
-        showTooltip(rows[0], "Shepley's quote is back. Open it");
+        const rows = [...document.querySelectorAll('[data-scope="liu"]')].filter(el => el.getBoundingClientRect().width > 0);
+        showTooltip(rows[0], 'A new addition request. Open it');
       }, 500);
-    } else if (tourStep === 2 && e.target.closest('[data-scope="saidnawey"]')) {
+    } else if (tourStep === 2 && e.target.closest('[data-scope="liu"]')) {
       tourStep = 3; hideTooltip();
       setTimeout(() => showTooltip($('scope-send'), 'Send to your subs'), 500);
     } else if (tourStep === 3 && e.target.closest('#scope-send')) {
