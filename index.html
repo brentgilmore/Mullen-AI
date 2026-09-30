@@ -1817,8 +1817,8 @@
       const st = sent[i];
       if (!st) return '';
       if (st.state === 'bid') return `<span class="badge b-green">Price in · ${usd0(st.bid)}</span>`;
-      if (st.state === 'viewed') return `<span class="badge b-accent">Opened it</span>`;
-      return `<span class="badge b-muted">Sent ✓</span>`;
+      if (st.state === 'viewed') return `<span class="badge b-amber">Opened it</span>`;
+      return `<span class="badge b-muted">Sent</span>`;
     };
     $('scope-body').innerHTML = `
       <div class="max-w-[820px] mx-auto">
@@ -1848,21 +1848,24 @@
         </div>
 
         <div class="section-label mt-8 mb-1">${isSent ? 'Who was asked to price what' : 'Review subcontractors'}</div>
-        ${isSent ? '' : `<div class="text-[14px] mb-3" style="color: var(--ink-2);">Pick who gets a bid request for each trade.</div>`}
+        ${isSent ? '' : `<div class="text-[14px] mb-3" style="color: var(--ink-2);">Check who gets a bid request. Your usual sub is already checked.</div>`}
         <div class="rounded-[16px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
           ${subTrades(job).map(([t, i], k) => `
-            <div data-trade="${i}" class="flex items-start gap-3 md:gap-4 px-4 md:px-5 py-4 ${k ? 'border-t' : ''}" style="border-color: var(--rule);${!isSent && !picks[i].size ? ' opacity: .6;' : ''}">
-              <div class="min-w-0 flex-1">
-                <div class="text-[15px]"><span class="font-semibold">${t.t}</span></div>
-                <div class="text-[14px] mt-1 leading-[1.5]" style="color: var(--ink-2);">${whatFor(job, t)}</div>
-                ${isSent ? `<div class="mt-2.5 space-y-1.5">${sentSubsFor(job, i).length ? sentSubsFor(job, i).map((n, b) => `<div class="flex items-center gap-2 text-[14px]"><span style="color: var(--ink);">${n}</span>${b === 0 ? status(i) : `<span class="badge b-muted">Sent ✓</span>`}</div>`).join('') : `<div class="text-[13.5px]" style="color: var(--ink-muted);">Not sent to anyone</div>`}</div>` : ''}
-                ${isSent ? '' : `<div class="flex flex-wrap items-center gap-2 mt-3">
-                  ${benchFor(t).map((n, b) => { const on = picks[i].has(n); return `<button data-sub="${i}-${b}" onclick="toggleSubPick(${i}, ${b})" class="pressable inline-flex items-center gap-1.5 text-[13.5px] px-3 py-1.5 rounded-full border" style="${on ? 'background: var(--accent); border-color: var(--accent); color: #fff;' : 'background: #fff; border-color: var(--rule); color: var(--ink-2);'}">${on ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'}${n}${b === 0 ? `<span class="text-[11.5px]" style="opacity: .75;">· usual</span>` : ''}</button>`; }).join('')}
-                  ${picks[i].size ? '' : `<span class="text-[13px]" style="color: var(--ink-muted);">Not asking anyone for this one</span>`}
-                </div>`}
+            <div data-trade="${i}" class="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-3 md:gap-8 px-5 py-4 ${k ? 'border-t' : ''}" style="border-color: var(--rule);">
+              <div class="min-w-0">
+                <div class="text-[15px] font-semibold">${t.t}</div>
+                <div class="text-[13.5px] mt-0.5 leading-[1.5]" style="color: var(--ink-muted);">${whatFor(job, t)}</div>
+                <button data-preview="${i}" onclick="previewSubView('${job.id}', ${i})" class="text-[13px] mt-1.5 hover:underline" style="color: var(--ink-2);">View scope →</button>
               </div>
-              <div class="shrink-0 flex flex-col md:flex-row items-end md:items-center gap-1.5 md:gap-2">
-                <button data-preview="${i}" onclick="previewSubView('${job.id}', ${i})" class="pressable btn-ghost text-[13px] font-medium px-3 py-1.5 rounded-full whitespace-nowrap" style="color: var(--accent);">See their scope</button>
+              <div class="flex flex-col">
+                ${isSent
+                  ? (sentSubsFor(job, i).length ? sentSubsFor(job, i).map((n, b) => `<div class="flex items-center justify-between gap-3 py-1.5 text-[14px]"><span class="truncate">${n}</span>${b === 0 ? status(i) : `<span class="badge b-muted">Sent</span>`}</div>`).join('') : `<div class="py-1.5 text-[13.5px]" style="color: var(--ink-muted);">Not sent</div>`)
+                  : benchFor(t).map((n, b) => { const on = picks[i].has(n); return `
+                  <label data-sub="${i}-${b}" class="flex items-center gap-2.5 py-1.5 px-2 -mx-2 rounded-[8px] cursor-pointer hover:bg-[var(--hover)] text-[14px]">
+                    <input type="checkbox" ${on ? 'checked' : ''} onchange="toggleSubPick(${i}, ${b})" class="w-4 h-4 shrink-0" style="accent-color: var(--accent);" />
+                    <span class="flex-1 truncate" style="color: ${on ? 'var(--ink)' : 'var(--ink-2)'};">${n}</span>
+                    ${b === 0 ? `<span class="text-[12px]" style="color: var(--ink-muted);">Usual</span>` : ''}
+                  </label>`; }).join('')}
               </div>
             </div>`).join('')}
         </div>
