@@ -570,7 +570,7 @@
     const f = parse(v);
     if (/cost|price|how much|budget|per (sf|square)/.test(t) && !f.type) {
       mode = 'project';
-      return say([`It depends a lot on the project and finishes. Roughly, from recent Mullen work: kitchens $${S.kitchenLo}K–$${S.kitchenHi}K, additions $${S.addLo}–$${S.addHi} per sf, custom homes from about $${S.newLo} per sf.`, `What kind of project are you thinking about? I can narrow it down.`], typeChoices());
+      return say([`It depends a lot on the project and finishes. Rough ranges: kitchens $${S.kitchenLo}K–$${S.kitchenHi}K, additions $${S.addLo}–$${S.addHi} per sf, custom homes from about $${S.newLo} per sf.`, `What kind of project are you thinking about? I can narrow it down.`], typeChoices());
     }
     const faq = matchFaq(v);
     if (faq) return say([esc(faq.a), `Anything else I can help with?`], [['I\'m planning a project', () => { mode = 'project'; say([`Wonderful. What are you thinking about?`], typeChoices()); }], ['No, that\'s all', () => say([`Thanks for stopping by!`])]]);
@@ -603,7 +603,7 @@
     if (S.showBallpark && !lead.budgetShown) return budgetNext();
     if (S.askPlans && !lead.plans) return say([`Do you have plans or an architect yet?`], [
       ['Yes, we have an architect', () => { lead.plans = 'Has an architect'; next(); }],
-      ['No, can you help?', () => { lead.plans = 'Needs design help'; say([`Yes. We do design-build, and we work with several Cape architects we trust.`], null, null, next); }],
+      ['No, can you help?', () => { lead.plans = 'Needs design help'; say([`Yes. Doug can talk through design options with you on the site visit.`], null, null, next); }],
     ]);
     if (S.offerVisit && visitTimes().length && !lead.visit) return say([`The best next step is a site visit with Doug: about 45 minutes, no charge. These times are open next week:`], [
       ...visitTimes().map(x => [x, () => { lead.visit = x; next(); }]),
@@ -622,16 +622,16 @@
     if (t === TYPES.addition) {
       const m = s.match(/\((\d[\d,]*) sf\)/);
       const sf = m ? +m[1].replace(',', '') : s.includes('300') ? 300 : s.includes('600') ? 600 : 400;
-      return [Math.round(sf * S.addLo / 5000) * 5, Math.round(sf * S.addHi / 5000) * 5, `Mullen additions have run about $${S.addLo}–$${S.addHi} per sf.`];
+      return [Math.round(sf * S.addLo / 5000) * 5, Math.round(sf * S.addHi / 5000) * 5, `Additions like this often run about $${S.addLo}–$${S.addHi} per sf.`];
     }
-    if (t === TYPES.new) { const sf = s.includes('4,500+') ? 5000 : s.includes('3,000–4,500') ? 3800 : 2800; return [Math.round(sf * S.newLo / 50000) * 50, Math.round(sf * S.newHi / 50000) * 50, `Custom homes have run about $${S.newLo}–$${S.newHi} per sf before land.`]; }
-    if (t === TYPES.kitchen) return [S.kitchenLo, S.kitchenHi, `Recent Mullen kitchens and baths have run $${S.kitchenLo}K–$${S.kitchenHi}K.`];
+    if (t === TYPES.new) { const sf = s.includes('4,500+') ? 5000 : s.includes('3,000–4,500') ? 3800 : 2800; return [Math.round(sf * S.newLo / 50000) * 50, Math.round(sf * S.newHi / 50000) * 50, `Custom homes often run about $${S.newLo}–$${S.newHi} per sf before land.`]; }
+    if (t === TYPES.kitchen) return [S.kitchenLo, S.kitchenHi, `Kitchens and baths like this often run $${S.kitchenLo}K–$${S.kitchenHi}K.`];
     return [250, 900, 'Whole-house renovations vary the most, depending on how much is opened up.'];
   }
   function budgetNext() {
     lead.budgetShown = true;
     const [lo, hi, why] = range(); lead.range = `$${lo.toLocaleString()}K – $${hi.toLocaleString()}K`;
-    say([`Here's an honest ballpark from past Mullen jobs. ${why}`], null, null, () => {
+    say([`Here's a rough ballpark. ${why}`], null, null, () => {
       card(`<div class="c-h"><span>Ballpark</span><span class="tag">not a quote</span></div><div class="c-body"><div class="c-range">${lead.range}</div><div class="c-bar"><i></i></div><div style="margin-top: 8px; font-size: 12.5px; color: var(--muted);">A real number comes after Doug sees the site.</div></div>`);
       say([`Does that fit what you had in mind?`], [
         ['Yes, that\'s in range', () => { lead.budget = 'In range'; next(); }],

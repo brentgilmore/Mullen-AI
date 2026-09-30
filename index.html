@@ -445,7 +445,7 @@
             </div>
 
             <div id="convo-result" class="hidden">
-              <p>The package is ready. Based on your last 12 Shepley quotes, I estimate materials at about <strong>$197,000</strong> before tax (±4%). You can start pricing the job with that number now instead of waiting on Shepley.</p>
+              <p>The package is ready. My estimate for materials is about <strong>$197,000</strong> before tax. It's a starting point you can price the job with now, instead of waiting on Shepley.</p>
 
               <div class="rounded-[16px] border overflow-hidden my-5" style="border-color: var(--rule); background: var(--surface);">
                 <table class="w-full text-[14.5px]">
@@ -467,7 +467,7 @@
                 </table>
               </div>
 
-              <p>I found <strong>3 things Shepley would otherwise call you about</strong>, so I answered or flagged them in the request: shingle colors aren't picked yet, the windows on sheet 4 need their own quote, and the stair railing needs a graspable handrail.</p>
+              <p>I found <strong>3 things the plans don't settle</strong>, so I answered or flagged them in the request: shingle colors aren't picked yet, the windows on sheet 4 need their own quote, and the stair railing needs a graspable handrail.</p>
 
               <div class="flex flex-wrap items-center gap-2 mt-5">
                 <button onclick="openQuoteRequest('saidnawey', 'package')" class="pressable btn-primary text-[15px] font-medium px-5 py-2.5 rounded-full flex items-center gap-2">
@@ -928,8 +928,8 @@
     { t: 1920, s: 'Building takeoff in Shepley\'s 21 groups', color: 'ink' },
     { t: 2200, s: '  Foundation -> Balcony Deck -> Hardware allowance   21/21', color: 'green' },
     { t: 2340, s: '', blank: true },
-    { t: 2420, s: 'Pricing against your last 12 Shepley quotes', color: 'ink' },
-    { t: 2740, s: '  Estimate: $197,000 materials before tax (+/- 4%)', color: 'green' },
+    { t: 2420, s: 'Pricing each group', color: 'ink' },
+    { t: 2740, s: '  Estimate: $197,000 materials before tax', color: 'green' },
     { t: 2880, s: '', blank: true },
     { t: 2960, s: 'Checking for gaps Shepley would call about', color: 'ink' },
     { t: 3180, s: '  ! Shingle color not specified on sheet 4', color: 'amber' },
@@ -1030,7 +1030,7 @@
     { t: 620,  s: '  14x20 sunroom on piers, cathedral ceiling, 3 skylights', color: 'muted' },
     { t: 800,  s: '  Tie into existing hip roof, radiant floor, done by Memorial Day', color: 'muted' },
     { t: 980,  s: '', blank: true },
-    { t: 1060, s: 'Picking trades from your past sunroom jobs', color: 'ink' },
+    { t: 1060, s: 'Picking the trades for a sunroom', color: 'ink' },
     { t: 1340, s: '  Foundation (piers), Framing, Roofing, Windows/skylights,', color: 'green' },
     { t: 1480, s: '  Electrical, Plumbing (radiant), Insulation, Drywall', color: 'green' },
     { t: 1640, s: '', blank: true },
@@ -1107,14 +1107,14 @@
   const CHATS = [
     { id: 'C1', who: 'Mark & Priya Desai', kind: 'lead', topic: 'New home on a waterfront lot', outcome: 'Site visit booked · Thu 10 AM', when: 'Today 10:14 AM', needsYou: false,
       rows: [['Project', 'New custom home'], ['Town', 'Osterville'], ['Size', '3,000–4,500 sf'], ['Start', 'Next year'], ['Ballpark', '$2,450K – $3,600K'], ['Design', 'Has an architect'], ['Site visit', 'Thu 10:00 AM'], ['Contact', 'pdesai@… · 617-555-0148']],
-      transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','Planning a new project'],['bot','Great. What kind of project?'],['user','New custom home'],['bot','Where\'s the property?'],['user','Osterville, on the water'],['bot','We\'ve built 11 homes in Osterville. Timeline?'],['user','Break ground next spring'],['bot','Doug can walk the lot with you. Thursday 10 AM or Friday 2 PM?'],['user','Thursday'],['bot','Booked! Confirmation sent. Doug will bring examples of waterfront work.']] },
+      transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','Planning a new project'],['bot','Great. What kind of project?'],['user','New custom home'],['bot','Where\'s the property?'],['user','Osterville, on the water'],['bot','Great. What\'s your timeline?'],['user','Break ground next spring'],['bot','Doug can walk the lot with you. Thursday 10 AM or Friday 2 PM?'],['user','Thursday'],['bot','Booked! Confirmation sent. Doug will bring examples of waterfront work.']] },
     { id: 'C2', who: 'Laura Whitcomb', kind: 'client', topic: 'When do roofers start?', outcome: 'Answered from schedule', when: 'Today 8:02 AM', needsYou: false,
       transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','I\'m a current client'],['bot','Welcome back. I sent a 6-digit code to the email on file.'],['user','482913'],['bot','Thanks, Laura. What can I help with on the Whitcomb Addition?'],['user','When do the roofers start?'],['bot','Tidewater Roofing is scheduled for Mon Oct 20, right after framing. Want Doug to call you?'],['user','No that\'s perfect, thanks']] },
     { id: 'C3', who: 'Crocker Electric', kind: 'trade', topic: 'Question on Whitcomb electrical scope', outcome: 'Opened pre-filled scope', when: 'Today 7:39 AM', needsYou: false,
       transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','I\'m a contractor'],['bot','Are you bidding on a current scope, or want to join our sub list?'],['user','Bidding, Whitcomb electrical'],['bot','Here\'s your scope. 17 of 20 items are filled in; 3 questions are left for you. [Open scope]']] },
     { id: 'C4', who: 'Tom Brennan', kind: 'lead', topic: 'Kitchen remodel pricing', outcome: 'Wants a call back', when: 'Yesterday 7:48 PM', needsYou: true,
       rows: [['Project', 'Kitchen or bath'], ['Town', 'Cotuit'], ['Ballpark', '$120K – $250K'], ['Budget fit', 'In range'], ['Contact', 'tbrennan@…']],
-      transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','How much does a kitchen remodel cost?'],['bot','It depends on size and finishes. Recent Mullen kitchens have run $120K–$250K. Want a site visit for a real number?'],['user','Sure'],['bot','What\'s the best email?'],['user','tbrennan@…'],['bot','Thanks, Tom. Doug\'s office will reach out tomorrow.']] },
+      transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','How much does a kitchen remodel cost?'],['bot','It depends on size and finishes. Kitchens like this often run $120K–$250K. Want a site visit for a real number?'],['user','Sure'],['bot','What\'s the best email?'],['user','tbrennan@…'],['bot','Thanks, Tom. Doug\'s office will reach out tomorrow.']] },
     { id: 'C5', who: 'Ellen Carver', kind: 'client', topic: 'Storm check request', outcome: 'Needs Doug: after-hours request', when: 'Sun 6:31 PM', needsYou: true,
       transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','I\'m a current client'],['bot','Welcome back. I sent a code to the email on file.'],['user','771204'],['bot','Thanks, Ellen. What can I help with?'],['user','Can someone check the house after the storm?'],['bot','Yes. I\'ve flagged it for Doug and put in a check for Tuesday morning. You\'ll get photos when it\'s done.']] },
     { id: 'C6', who: 'Karen Liu', kind: 'lead', topic: 'Addition over garage', outcome: 'Site visit booked · Mon 3 PM', when: 'Sat 11:20 AM', needsYou: false,
@@ -1219,7 +1219,7 @@
     if (instant) {
       streamLines($('stream'), QR_STREAM, { instant: true });
       dot.classList.remove('pulse-dot');
-      status.innerHTML = '<span style="color: var(--green);">complete · 3m 48s</span>';
+      status.innerHTML = '<span style="color: var(--green);">complete</span>';
       $('convo-result').classList.remove('hidden');
       return;
     }
@@ -1249,7 +1249,7 @@
     { t: 920,  s: '  Photo 31: north wall clear 9\' for mini-split condenser', color: 'muted' },
     { t: 1100, s: 'Addition: 16x24, 1.5 story, primary suite + bath + WIC', color: 'ink' },
     { t: 1280, s: '', blank: true },
-    { t: 1360, s: 'Picking trades (from your last 6 additions)', color: 'ink' },
+    { t: 1360, s: 'Picking the trades for an addition', color: 'ink' },
     { t: 1640, s: '  9 trades: foundation, framing, roofing, electrical,', color: 'green' },
     { t: 1780, s: '  plumbing, HVAC, insulation, drywall, tile', color: 'green' },
     { t: 1940, s: '', blank: true },
@@ -1324,7 +1324,7 @@
     else closeApps();
   }
   function qrStatusBadge(q) {
-    if (q.status === 'received') return `<span class="badge b-green">Back from Shepley · ${q.days} days</span>`;
+    if (q.status === 'received') return `<span class="badge b-green">Back from Shepley · ${q.returned}</span>`;
     if (q.status === 'waiting')  return `<span class="badge b-amber">Waiting · day ${q.days}</span>`;
     if (q.status === 'building') return `<span class="badge b-muted inline-flex items-center gap-2">${ICON.spinner}Reading plans…</span>`;
     return `<span class="badge b-accent">Draft · ready to send</span>`;
@@ -1342,8 +1342,7 @@
           <div class="text-[14px] mt-1 leading-[1.55] max-w-[780px]" style="color: var(--ink-2);"><span style="color: var(--ink); font-weight: 600;">What it does:</span> Turns an architect's plan set into a complete takeoff request for Shepley, in the groups they quote in. It also gives you a material estimate in minutes, so you can price the job while Shepley does the formal quote.</div>
         </div>
         <p class="mb-8 max-w-[880px] text-[18px] md:text-[19px] leading-[1.65]" style="color: var(--ink-2);">
-          You have <span class="num">${QUOTE_REQUESTS.length} quote requests</span> open. Shepley has sent back <span class="num filter-link" onclick="openQuoteRequest('saidnawey','compare')">1</span> (Saidnawey, <strong style="color: var(--ink);">17 days</strong>), and <span class="num">${waiting}</span> are still waiting.
-          <span class="block mt-3">This year the estimate has come within <strong style="color: var(--ink);">4%</strong> of Shepley's final number on <strong style="color: var(--ink);">11 of 12</strong> jobs.</span>
+          You have <span class="num">${QUOTE_REQUESTS.length} quote requests</span> open. Shepley has sent back <span class="num filter-link" onclick="openQuoteRequest('saidnawey','compare')">1</span> (Saidnawey), and <span class="num">${waiting}</span> are still waiting.
         </p>
         <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
           <table class="w-full text-[15px] hidden md:table">
@@ -1386,9 +1385,9 @@
     if (qrState.tab === 'flags') content = renderQrFlags();
 
     const timeline = q.status === 'received'
-      ? `Estimate ready <strong>Aug 18, 3m 48s</strong> after upload · Shepley's quote came back <strong>Sep 4</strong>, <strong>17 days</strong> later`
+      ? `Progress set dated <strong>8/16</strong> · Shepley's quote dated <strong>Sep 4</strong>`
       : q.status === 'waiting'
-        ? `Estimate ready ${q.sent} · Shepley on <strong>day ${q.days}</strong> (their average is 13) · <a class="underline decoration-dotted cursor-pointer" onclick="showToast('Follow-up drafted to Team Pina')">nudge Team Pina</a>`
+        ? `Estimate ready ${q.sent} · Shepley on <strong>day ${q.days}</strong> · <a class="underline decoration-dotted cursor-pointer" onclick="showToast('Follow-up drafted to Team Pina')">nudge Team Pina</a>`
         : `Estimate ready · not sent to Shepley yet`;
 
     $('qr-body').innerHTML = `
@@ -1403,10 +1402,10 @@
         <div class="text-[14px] mb-6 [&_strong]:text-[var(--ink)] [&_strong]:font-semibold" style="color: var(--ink-2);">${timeline}</div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-7">
-          ${statCard('Estimate', usd0(q.aiTotal), 'materials before tax')}
+          ${statCard('Estimate', usd0(q.aiTotal), 'example · materials before tax')}
           ${statCard('Shepley quote', q.shepleyTotal ? usd0(q.shepleyTotal) : 'Pending', q.shepleyTotal ? 'incl. ext doors + tax' : 'Team Pina · Hyannis')}
-          ${statCard(isS ? 'Difference' : 'Plan sheets', isS ? (((q.aiTotal - SAIDNAWEY_GROUPS.reduce((a, r) => a + r.shepley, 0)) / SAIDNAWEY_GROUPS.reduce((a, r) => a + r.shepley, 0)) * 100).toFixed(1).replace('-', '−') + '%' : q.sheets, isS ? 'estimate vs. frame quote' : q.planSet)}
-          ${statCard('Time saved', isS ? '17 days' : '~2 weeks', isS ? 'to a number you can use' : 'expected Shepley wait')}
+          ${statCard(isS ? 'Plans → quote' : 'Plan sheets', isS ? '8/18 → 9/4' : q.sheets, isS ? 'progress set to Shepley quote' : q.planSet)}
+          ${statCard(isS ? 'Flags' : 'Shepley', isS ? String(SAIDNAWEY_FLAGS.length) : (q.status === 'waiting' ? 'Day ' + q.days : 'Not sent'), isS ? 'to settle before ordering' : 'Team Pina · Hyannis')}
         </div>
 
         <div class="flex items-center gap-1 p-1 rounded-[12px] mb-5 w-fit max-w-full overflow-x-auto scroll-hide" style="background: var(--sidebar);">
@@ -1509,12 +1508,12 @@
     };
     return `
       <p class="text-[16px] leading-[1.6] mb-5 max-w-[860px]" style="color: var(--ink-2);">
-        Shepley's frame quote <span class="mono text-[14px]">0002860097</span> came back at <strong style="color: var(--ink);">${usd(shepSub)}</strong> before tax. The estimate on Aug 18 was <strong style="color: var(--ink);">${usd0(aiSub)}</strong>, <strong style="color: var(--ink);">${Math.abs(pct(aiSub, shepSub)).toFixed(1)}%</strong> lower. ${SAIDNAWEY_GROUPS.filter(r => Math.abs(pct(r.ai, r.shepley)) < 3).length} of 21 groups were within 3%. Tap a flagged group to see why it's different.
+        Shepley's frame quote <span class="mono text-[14px]">0002860097</span> came back at <strong style="color: var(--ink);">${usd(shepSub)}</strong> before tax. Here it is next to the estimate, group by group, so you can see where they differ. Tap a flagged group to see why.
       </p>
       <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
         <table class="w-full text-[14.5px]">
           <thead><tr class="border-b text-[13px] font-medium" style="border-color: var(--rule); color: var(--ink-muted);">
-            <th class="text-left px-4 md:px-5 py-3">Group</th><th class="text-right px-4 md:px-5 py-3">Shepley</th><th class="text-right px-4 md:px-5 py-3 hidden sm:table-cell">Estimate</th><th class="text-right px-4 md:px-5 py-3">Δ</th>
+            <th class="text-left px-4 md:px-5 py-3">Group</th><th class="text-right px-4 md:px-5 py-3">Shepley</th><th class="text-right px-4 md:px-5 py-3 hidden sm:table-cell">Estimate (example)</th><th class="text-right px-4 md:px-5 py-3">Δ</th>
           </tr></thead>
           <tbody>${SAIDNAWEY_GROUPS.map(row).join('')}</tbody>
           <tfoot>
@@ -1804,7 +1803,7 @@
       SCOPES.unshift({
         id: 'lindqvist', job: 'Lindqvist Sunroom', client: 'Erik & Anna Lindqvist', addr: '62 Putnam Ave, Cotuit',
         summary: '14×20 sunroom off the kitchen on piers. Cathedral ceiling, 3 skylights, ties into the existing hip roof, electric radiant floor. Done by Memorial Day.',
-        source: 'Your description + 4 past sunroom jobs', due: 'Ready for you to review', created: 'Today', cameFrom: 'Your description',
+        source: 'Your description', due: 'Ready for you to review', created: 'Today', cameFrom: 'Your description',
         trades: [
           { t: 'Foundation (helical piers)', sub: 'Barnstable Site Works', prefilled: 12, total: 14, status: 'draft' },
           { t: 'Framing', sub: 'Mullen crew (in-house)', prefilled: 16, total: 16, status: 'inhouse' },
@@ -2123,7 +2122,7 @@
             ${toggleRow('set-askPlans', 'Whether they have an architect', '', S.askPlans)}
             ${toggleRow('set-offerVisit', 'Offer a site visit with Doug', 'Uses the visit times below.', S.offerVisit)}
           </div>`)}
-        ${card('Ballpark prices', 'What the chat quotes as a rough range. Never a firm number.', `
+        ${card('Ballpark prices', 'Placeholder ranges. Mullen sets their own. The chat always says it\'s a rough range, never a quote.', `
           <div class="grid grid-cols-2 gap-3">
             ${field('Kitchen / bath low ($K)', '', num('set-kitchenLo', S.kitchenLo))}${field('Kitchen / bath high ($K)', '', num('set-kitchenHi', S.kitchenHi))}
             ${field('Additions low ($/sf)', '', num('set-addLo', S.addLo))}${field('Additions high ($/sf)', '', num('set-addHi', S.addHi))}
