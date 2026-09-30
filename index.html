@@ -1,0 +1,2278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Mullen AI — Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg: #F7F5EE;
+    --sidebar: #F1EEE5;
+    --surface: #FDFCF8;
+    --hover: #ECE8DC;
+    --user-bubble: #EBE6D5;
+    --ink: #1A1714;
+    --ink-2: #403A32;
+    --ink-muted: #787065;
+    --rule: #E3DECD;
+    --accent: #8E120A;
+    --accent-deep: #6B0D07;
+    --accent-soft: #F3DEDB;
+    --green: #1F5B3B;
+    --green-soft: #DCE5D6;
+    --amber: #B4691E;
+    --amber-soft: #F2E3CA;
+    --red: #A33B2B;
+    --red-soft: #F3DCD6;
+    --term-bg: #18140F;
+    --term-ink: #E8DDC1;
+    --term-green: #86CFA2;
+    --term-amber: #E0A56A;
+    --term-muted: #8A7D65;
+  }
+  * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html, body { background: var(--bg); color: var(--ink); font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; font-size: 16px; }
+  html, body, #app { height: 100%; }
+  .serif { font-family: 'Fraunces', 'Times New Roman', serif; font-optical-sizing: auto; }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  .scroll-hide::-webkit-scrollbar { width: 10px; height: 10px; }
+  .scroll-hide::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 10px; }
+  .scroll-hide::-webkit-scrollbar-track { background: transparent; }
+
+  .thread-item { transition: background 0.12s ease; }
+  .thread-item:hover, .thread-item.active { background: var(--hover); }
+
+  .pressable { transition: transform 0.1s ease, background 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease; }
+  .pressable:hover { opacity: 0.94; }
+  .pressable:active { transform: translateY(1px); }
+
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-deep); }
+  .btn-secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--rule); }
+  .btn-secondary:hover { background: var(--hover); }
+  .btn-dark { background: var(--ink); color: var(--bg); }
+  .btn-dark:hover { background: #000; }
+  .btn-cream { background: var(--user-bubble); color: var(--ink); border: 1px solid var(--rule); }
+  .btn-cream:hover { background: var(--hover); }
+  .btn-ghost { background: transparent; color: var(--ink-2); }
+  .btn-ghost:hover { background: var(--hover); }
+
+  .writing-surface { transition: border-color 0.18s ease, box-shadow 0.18s ease; }
+  .writing-surface:focus-within { border-color: var(--ink-2); box-shadow: 0 0 0 3px rgba(26, 23, 20, 0.06); }
+
+  .terminal-line { opacity: 0; transform: translateY(2px); animation: stream 0.22s ease-out forwards; }
+  @keyframes stream { to { opacity: 1; transform: translateY(0); } }
+
+  .pulse-dot { animation: pulseDot 1.2s ease-in-out infinite; }
+  @keyframes pulseDot { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
+
+  .spin { animation: spin 1.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .drawer { transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .drawer.closed { transform: translateX(100%); }
+
+  .reveal { opacity: 0; transform: translateY(8px); animation: reveal 0.6s cubic-bezier(0.2,0.8,0.2,1) forwards; }
+  @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
+
+  button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 12px; }
+  [contenteditable]:focus, [contenteditable]:focus-visible { outline: none; }
+  input:focus, textarea:focus { outline: none; }
+
+  .fade-in { animation: fadeIn 0.28s ease-out; }
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+  .prose p { margin-bottom: 1rem; }
+  .prose p:last-child { margin-bottom: 0; }
+
+  .empty-placeholder:empty::before { content: attr(data-placeholder); color: var(--ink-muted); pointer-events: none; }
+  .num { color: var(--ink); font-weight: 700; }
+
+  .filter-link {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 4px;
+    text-decoration-color: var(--rule);
+    transition: text-decoration-color 0.15s ease, color 0.15s ease;
+  }
+  .filter-link:hover { text-decoration-color: var(--ink-2); }
+
+  .workflow-card { transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; box-shadow: 0 1px 2px rgba(26, 23, 20, 0.04); }
+  .workflow-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26, 23, 20, 0.07); border-color: var(--ink-muted); }
+
+  .floating-chat-shadow { box-shadow: 0 10px 40px rgba(26, 23, 20, 0.10), 0 2px 8px rgba(26, 23, 20, 0.04); }
+
+  .tab-pill { transition: background 0.15s ease, color 0.15s ease; }
+  .tab-pill.is-active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(26,23,20,0.06); font-weight: 500; }
+  .tab-pill:not(.is-active) { color: var(--ink-muted); }
+
+  .row { transition: background 0.12s ease; }
+  .row:hover { background: var(--hover); }
+
+  .badge { font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 999px; display: inline-block; white-space: nowrap; }
+  .b-accent { background: var(--accent-soft); color: var(--accent); }
+  .b-green  { background: var(--green-soft); color: var(--green); }
+  .b-amber  { background: var(--amber-soft); color: var(--amber); }
+  .b-red    { background: var(--red-soft); color: var(--red); }
+  .b-muted  { background: var(--hover); color: var(--ink-muted); }
+
+  .kv { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-top: 1px solid var(--rule); }
+  .kv:first-child { border-top: none; }
+  .kv > span:first-child { color: var(--ink-muted); }
+  .kv > span:last-child { text-align: right; }
+
+  .section-label { font-size: 12px; font-weight: 600; color: var(--ink-muted); letter-spacing: 0.4px; text-transform: uppercase; }
+
+  /* Mock website + chat widget */
+  .site-frame { background: #fff; border: 1px solid var(--rule); border-radius: 16px; overflow: hidden; }
+  .widget { box-shadow: 0 18px 44px rgba(21, 43, 64, 0.20), 0 2px 8px rgba(21, 43, 64, 0.08); }
+  .bubble-in { animation: bubbleIn 0.28s cubic-bezier(0.2,0.8,0.2,1); }
+  @keyframes bubbleIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .typing span { display: inline-block; width: 6px; height: 6px; border-radius: 99px; background: var(--ink-muted); margin: 0 1.5px; animation: typing 1s infinite ease-in-out; }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes typing { 0%, 80%, 100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
+  .choice { transition: background 0.15s ease, border-color 0.15s ease; }
+  .choice:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.40  0 0 0 0 0.34  0 0 0 0 0.22  0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    mix-blend-mode: multiply;
+    opacity: 0.22;
+    z-index: 1;
+  }
+
+  /* Fixed overlays sit below the attribution banner while it's showing */
+  .app-view, #drawer, #wishlist-view { top: var(--banner-h, 0px) !important; }
+  #drawer { height: calc(100vh - var(--banner-h, 0px)) !important; }
+
+  /* ---- Mobile ---- */
+  #mobile-hamburger { display: none; }
+  #sidebar-backdrop { display: none; }
+  @media (max-width: 767px) {
+    #sidebar { display: none; position: fixed; top: 0; left: 0; bottom: 0; z-index: 40; box-shadow: 4px 0 24px rgba(26, 23, 20, 0.18); }
+    #sidebar.is-open { display: flex; }
+    #sidebar-backdrop.is-open { display: block; }
+    #mobile-hamburger { display: inline-flex; }
+    #thread-header { padding-left: 4rem; padding-right: 1rem; }
+    #drawer { width: 100vw !important; }
+    .app-pad { padding-left: 1rem !important; padding-right: 1rem !important; }
+  }
+  body:has(.app-view:not(.hidden)) #mobile-hamburger,
+  body:has(#wishlist-view:not(.hidden)) #mobile-hamburger,
+  body:has(#sidebar.is-open) #mobile-hamburger { display: none !important; }
+
+  /* ---- Guided tour tooltip ---- */
+  #tooltip { position: fixed; z-index: 60; pointer-events: none; opacity: 0; transform: scale(0.88) translateY(6px); transform-origin: center bottom; transition: opacity 0.18s ease, transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1); display: flex; flex-direction: column; align-items: center; }
+  #tooltip.is-visible { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; animation: tooltip-breath 2.6s ease-in-out 0.4s infinite; }
+  @keyframes tooltip-breath { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.02) translateY(-2px); } }
+  #tooltip-body { background: var(--surface); color: var(--ink); padding: 10px 14px; border-radius: 14px; font-size: 14px; font-weight: 500; border: 1px solid var(--rule); box-shadow: 0 14px 32px rgba(26, 23, 20, 0.14), 0 2px 6px rgba(26, 23, 20, 0.06); display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+  #tooltip-skip { color: var(--ink-muted); padding: 0 2px; font-size: 18px; line-height: 1; cursor: pointer; }
+  #tooltip-skip:hover { color: var(--ink); }
+  #tooltip-caret { width: 12px; height: 12px; background: var(--surface); border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin-top: -7px; transform: rotate(45deg); border-radius: 2px; }
+  #tooltip.flip-down { transform-origin: center top; }
+  #tooltip.flip-down #tooltip-body { order: 2; }
+  #tooltip.flip-down #tooltip-caret { margin-top: 0; margin-bottom: -7px; border: 1px solid var(--rule); border-right: none; border-bottom: none; order: 1; }
+  .tour-pulse { animation: tour-pulse 1.8s ease-in-out infinite; border-radius: 14px; }
+  @keyframes tour-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(180, 105, 30, 0.0); } 50% { box-shadow: 0 0 0 8px rgba(180, 105, 30, 0.16); } }
+</style>
+</head>
+<body class="h-screen overflow-hidden flex flex-col">
+
+<!-- Attribution banner -->
+<div id="attribution-banner" class="shrink-0 border-b relative" style="background: var(--sidebar); border-color: var(--rule); position: relative; z-index: 3;">
+  <div class="flex items-center justify-center gap-2 md:gap-3 px-10 md:px-12 py-1.5 text-[12px] md:text-[12.5px]" style="color: var(--ink-muted);">
+    <span class="truncate">
+      Made by
+      <a href="https://www.brentgilmore.com/" target="_blank" rel="noopener noreferrer" class="hover:underline" style="color: var(--ink-2); font-weight: 500;">Brent Gilmore</a>
+      <span class="hidden sm:inline">@ <a href="https://www.different-inc.com/" target="_blank" rel="noopener noreferrer" class="hover:underline" style="color: var(--ink-2); font-weight: 500;">Different</a></span>
+    </span>
+    <a href="https://www.different-inc.com/" target="_blank" rel="noopener noreferrer" class="pressable inline-flex items-center px-3 py-0.5 rounded-full shrink-0" style="background: var(--surface); border: 1px solid var(--rule); color: var(--ink); font-weight: 500;">
+      <span class="hidden sm:inline">Book a call</span><span class="sm:hidden">Book call</span>
+    </a>
+  </div>
+  <button onclick="document.getElementById('attribution-banner').remove(); syncBannerHeight()" aria-label="Dismiss" class="absolute top-1/2 -translate-y-1/2 right-3 p-1 rounded-full hover:bg-[var(--hover)] transition-colors" style="color: var(--ink-muted);">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+</div>
+
+<div id="app" class="flex flex-1 min-h-0" style="position: relative; z-index: 2;">
+
+  <button id="mobile-hamburger" onclick="toggleSidebar()" class="pressable fixed top-3 left-3 z-50 w-10 h-10 rounded-full items-center justify-center" style="background: var(--surface); border: 1px solid var(--rule); color: var(--ink);" title="Menu">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 z-30" style="background: rgba(26, 23, 20, 0.38);"></div>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="w-[280px] shrink-0 border-r flex flex-col" style="background: var(--sidebar); border-color: var(--rule);">
+    <div class="px-5 pt-6 pb-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-[10px] flex items-center justify-center" style="background: var(--accent);">
+          <span class="serif text-white text-[17px]" style="font-weight: 500;">M</span>
+        </div>
+        <div class="serif text-[20px] leading-none" style="font-weight: 500; letter-spacing: -0.01em;">
+          Mullen <span style="color: var(--ink-muted); font-weight: 400;">AI</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-4 pb-3">
+      <button onclick="goHome()" class="pressable btn-cream w-full text-left px-4 py-3 rounded-[14px] flex items-center gap-2.5 text-[15px] font-medium">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span>New chat</span>
+      </button>
+    </div>
+
+    <div class="px-4 pb-5">
+      <div class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[14px]" style="background: var(--bg); border: 1px solid var(--rule);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-muted);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="flex-1 text-[14px] outline-none bg-transparent placeholder:text-[var(--ink-muted)]" placeholder="Search chats" />
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto scroll-hide px-3 pb-2">
+      <div class="px-3 pt-2 pb-2 text-[13px] font-medium" style="color: var(--ink-muted);">Today</div>
+      <button onclick="runScopeConversation(true)" class="thread-item w-full text-left px-3 py-2.5 rounded-[10px]">
+        <span class="text-[14.5px] truncate block">Sub scopes — Whitcomb addition</span>
+      </button>
+      <button onclick="openChatApp('leads')" class="thread-item w-full text-left px-3 py-2.5 rounded-[10px]">
+        <span class="text-[14.5px] truncate block">New web leads — Osterville</span>
+      </button>
+
+      <div class="px-3 pt-5 pb-2 text-[13px] font-medium" style="color: var(--ink-muted);">Yesterday</div>
+      <button onclick="openQuoteRequest('saidnawey', 'compare')" class="thread-item w-full text-left px-3 py-2.5 rounded-[10px]">
+        <span class="text-[14.5px] truncate block">Shepley quote vs. estimate — Saidnawey</span>
+      </button>
+      <button onclick="openChatApp('convos')" class="thread-item w-full text-left px-3 py-2.5 rounded-[10px]">
+        <span class="text-[14.5px] truncate block">Website chats this week</span>
+      </button>
+
+      <div class="px-3 pt-5 pb-2 text-[13px] font-medium" style="color: var(--ink-muted);">Previous 30 days</div>
+      <button onclick="showConversation()" class="thread-item w-full text-left px-3 py-2.5 rounded-[10px]">
+        <span class="text-[14.5px] truncate block">Shepley request — Saidnawey Residence</span>
+      </button>
+      <button onclick="openQuoteRequest('whitcomb')" class="thread-item w-full text-left px-3 py-2.5 rounded-[10px]">
+        <span class="text-[14.5px] truncate block">Takeoff — Whitcomb addition</span>
+      </button>
+      <button onclick="showToast('Opens the chat history in the full build')" class="thread-item w-full text-left px-3 py-2.5 rounded-[10px]">
+        <span class="text-[14.5px] truncate block">Change order wording — Coleman</span>
+      </button>
+    </div>
+
+    <div class="border-t px-4 py-3" style="border-color: var(--rule);">
+      <button onclick="showToast('Settings coming soon. Ping Brent.')" class="thread-item w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px]">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center text-[14px] font-medium" style="background: var(--accent); color: #fff;">DM</div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-[14px] font-medium truncate">Doug Mullen</div>
+          <div class="text-[13px] truncate" style="color: var(--ink-muted);">Mullen Building &amp; Remodeling</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-muted);"><polyline points="18 15 12 9 6 15"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 flex flex-col min-w-0 relative">
+
+    <div id="thread-header" class="hidden h-[64px] shrink-0 border-b flex items-center justify-between px-8" style="border-color: var(--rule);">
+      <span id="thread-title" class="text-[15px] font-medium truncate">Shepley request — Saidnawey Residence</span>
+      <button onclick="showToast('Share link copied')" class="pressable btn-ghost text-[14px] font-medium px-3.5 py-2 rounded-[10px]">Share</button>
+    </div>
+
+    <div id="scroll-area" class="flex-1 overflow-y-auto scroll-hide">
+
+      <!-- HERO -->
+      <section id="hero" class="min-h-full flex flex-col px-6 py-12 reveal">
+        <div class="w-full max-w-[820px] mx-auto flex-1 flex flex-col">
+          <div class="flex-1 flex flex-col items-center justify-center">
+            <button onclick="openWishlist()" class="pressable mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full border text-[13.5px] font-medium" style="background: var(--surface); border-color: var(--rule); color: var(--ink);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--amber);"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8 19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2 19 5"/><path d="m3 21 9-9"/><path d="M12.2 6.2 11 5"/></svg>
+              <span>Wish List</span>
+              <span class="text-[12.5px] hidden sm:inline" style="color: var(--ink-muted);">· What's slowing you down?</span>
+            </button>
+            <h1 class="serif text-center leading-[1.05] mb-10" style="font-weight: 400; font-size: clamp(38px, 4.4vw, 52px); letter-spacing: -0.022em;">
+              Good afternoon, Doug.
+            </h1>
+
+            <div class="w-full max-w-[760px]">
+              <div class="writing-surface rounded-[28px] border shadow-sm" style="background: var(--surface); border-color: var(--rule);">
+                <div class="px-6 pt-5 pb-3">
+                  <div id="hero-input" contenteditable="true" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();runFromHero();}"
+                    class="text-[17px] leading-[1.55] outline-none min-h-[56px] empty-placeholder" style="color: var(--ink);"
+                    data-placeholder="Message Mullen AI, or drop in a plan set"></div>
+                </div>
+                <div class="px-4 pb-4 pt-1 flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <button onclick="attachPlanSet()" class="pressable btn-ghost p-2.5 rounded-full" title="Attach">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                    <span id="hero-attachment" class="hidden items-center gap-2 px-3 py-1.5 rounded-full text-[13px] border" style="background: var(--bg); border-color: var(--rule); color: var(--ink-2);">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--red);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      <span class="truncate max-w-[180px] sm:max-w-none">Saidnawey_Progress_Binder_8.18.26.pdf</span>
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <button id="mic-btn" onclick="toggleMic()" class="pressable btn-ghost p-2.5 rounded-full" title="Dictate">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                    </button>
+                    <button onclick="runFromHero()" class="pressable btn-dark w-10 h-10 rounded-full flex items-center justify-center" title="Send">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- EXAMPLE -->
+              <div class="mt-5 flex flex-col items-start gap-1.5">
+                <div class="text-[11.5px] font-medium px-1" style="color: var(--ink-muted); letter-spacing: 0.4px;">TRY AN EXAMPLE</div>
+                <button id="hero-example" onclick="runScopeConversation(false)" class="pressable w-full text-left rounded-[14px] border px-4 py-2.5 text-[13.5px] leading-[1.5]" style="background: var(--surface); border-color: var(--rule); color: var(--ink-2);">
+                  <span style="color: var(--ink-muted); font-weight: 500;">Ex.</span> <span style="color: var(--ink);">"The Whitcombs in Osterville want a 16×24 primary suite off the back of their '62 Cape. Full bath, walk-in closet, mini-split, shed dormer to match. Write up scopes for the subs."</span>
+                </button>
+              </div>
+
+              <!-- WORKFLOWS -->
+              <div class="mt-6">
+                <div class="text-[13px] font-medium mb-2.5 px-1" style="color: var(--ink-muted);">Your workflows</div>
+                <div id="workflow-list" class="space-y-2"></div>
+              </div>
+            </div>
+          </div>
+          <div class="h-8"></div>
+        </div>
+      </section>
+
+      <!-- CONVERSATION: Scope agent -->
+      <section id="scope-conversation" class="hidden w-full max-w-[800px] mx-auto px-5 md:px-8 py-10">
+        <div class="mb-8 flex justify-end">
+          <div class="max-w-[88%] md:max-w-[82%] rounded-[22px] px-5 py-4 text-[17px] leading-[1.55]" style="background: var(--user-bubble); color: var(--ink);">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 mb-3 rounded-[10px] text-[13px] border max-w-full" style="background: var(--surface); border-color: var(--rule); color: var(--ink-2);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent); flex-shrink: 0;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span class="truncate">38 site photos · Whitcomb_Sketch_Set.pdf</span>
+            </div>
+            <div>The Whitcombs in Osterville want a 16×24 primary suite off the back of their '62 Cape. Full bath, walk-in closet, mini-split, shed dormer to match. Write up scopes for the subs.</div>
+          </div>
+        </div>
+        <div class="mb-8 flex gap-4">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5" style="background: var(--accent);">
+            <span class="serif text-[16px]" style="color: #fff; font-weight: 500;">M</span>
+          </div>
+          <div class="flex-1 min-w-0 text-[17px] leading-[1.6] prose" style="color: var(--ink);">
+            <p>On it. I'll go through the sketch set and photos, pick the trades, and fill in each scope with everything I can, so your subs only answer what's left.</p>
+            <div class="rounded-[16px] overflow-hidden my-5 border" style="border-color: var(--rule);">
+              <div class="flex items-center justify-between px-4 py-3 border-b" style="border-color: var(--rule); background: var(--surface);">
+                <div class="flex items-center gap-2.5">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-muted);"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                  <span class="text-[14px] font-medium">Scope writer</span>
+                  <span class="text-[14px]" style="color: var(--ink-muted);">running</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span id="sc-dot" class="w-2 h-2 rounded-full pulse-dot" style="background: var(--green);"></span>
+                  <span id="sc-status" class="mono text-[13px]" style="color: var(--ink-muted);">00:00</span>
+                </div>
+              </div>
+              <div style="background: var(--term-bg);">
+                <div id="sc-stream" class="mono text-[12.5px] md:text-[13.5px] leading-[1.8] px-4 md:px-5 py-4 min-h-[260px] max-h-[380px] overflow-y-auto overflow-x-auto scroll-hide" style="color: var(--term-ink);"></div>
+              </div>
+            </div>
+            <div id="sc-result" class="hidden">
+              <p>Nine scopes are drafted. <strong>88% of the fields are already filled</strong> from the sketches, photos and your standard specs. The subs only need to answer 17 questions between them, plus their price.</p>
+              <div class="rounded-[16px] border overflow-hidden my-5" style="border-color: var(--rule); background: var(--surface);">
+                <table class="w-full text-[14.5px]">
+                  <thead><tr class="border-b text-[13px] font-medium" style="border-color: var(--rule); color: var(--ink-muted);">
+                    <th class="text-left px-4 md:px-5 py-3">Trade</th><th class="text-left px-4 md:px-5 py-3 hidden sm:table-cell">Sub</th><th class="text-right px-4 md:px-5 py-3">Filled in</th>
+                  </tr></thead>
+                  <tbody id="sc-tbody"></tbody>
+                </table>
+              </div>
+              <p>Two things to confirm first: the photos show the panel is <strong>Square D, 2011, with 6 open slots</strong>, and I set <strong>bids due Oct 3</strong> so framing can start Oct 13. Want me to send them?</p>
+              <div class="flex flex-wrap items-center gap-2 mt-5">
+                <button onclick="sendScopesFromChat()" class="pressable btn-primary text-[15px] font-medium px-5 py-2.5 rounded-full flex items-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                  <span>Open in Scope Agent</span>
+                </button>
+                <button onclick="previewSubView('whitcomb', 3)" class="pressable btn-secondary text-[15px] font-medium px-5 py-2.5 rounded-full">Preview the electrical scope</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="h-4"></div>
+      </section>
+
+      <!-- CONVERSATION: Shepley request -->
+      <section id="conversation" class="hidden w-full max-w-[800px] mx-auto px-5 md:px-8 py-10">
+        <div class="mb-8 flex justify-end">
+          <div class="max-w-[88%] md:max-w-[82%] rounded-[22px] px-5 py-4 text-[17px] leading-[1.55]" style="background: var(--user-bubble); color: var(--ink);">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 mb-3 rounded-[10px] text-[13px] border max-w-full" style="background: var(--surface); border-color: var(--rule); color: var(--ink-2);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--red); flex-shrink: 0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span class="truncate">Saidnawey_Progress_Binder_8.18.26.pdf · 13 sheets</span>
+            </div>
+            <div>Here's Jennifer's progress set for the Saidnawey house at 33 Hedge Row. Put together the takeoff request for Shepley and give me a ballpark while we wait.</div>
+          </div>
+        </div>
+
+        <div class="mb-8 flex gap-4">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5" style="background: var(--accent);">
+            <span class="serif text-[16px]" style="color: #fff; font-weight: 500;">M</span>
+          </div>
+          <div class="flex-1 min-w-0 text-[17px] leading-[1.6] prose" style="color: var(--ink);">
+            <p>Reading all 13 sheets now. I'll build the request in the same groups Shepley quotes in, so Team Pina can work straight down it.</p>
+
+            <div class="rounded-[16px] overflow-hidden my-5 border" style="border-color: var(--rule);">
+              <div class="flex items-center justify-between px-4 py-3 border-b" style="border-color: var(--rule); background: var(--surface);">
+                <div class="flex items-center gap-2.5">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--ink-muted);"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                  <span class="text-[14px] font-medium">Plan reader</span>
+                  <span class="text-[14px]" style="color: var(--ink-muted);">running</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span id="terminal-dot" class="w-2 h-2 rounded-full pulse-dot" style="background: var(--green);"></span>
+                  <span id="terminal-status" class="mono text-[13px]" style="color: var(--ink-muted);"><span id="timer">00:00</span></span>
+                </div>
+              </div>
+              <div style="background: var(--term-bg);">
+                <div id="stream" class="mono text-[12.5px] md:text-[13.5px] leading-[1.8] px-4 md:px-5 py-4 min-h-[260px] max-h-[380px] overflow-y-auto overflow-x-auto scroll-hide" style="color: var(--term-ink);"></div>
+              </div>
+            </div>
+
+            <div id="convo-result" class="hidden">
+              <p>The package is ready. Based on your last 12 Shepley quotes, I estimate materials at about <strong>$197,000</strong> before tax (±4%). You can start pricing the job with that number now instead of waiting on Shepley.</p>
+
+              <div class="rounded-[16px] border overflow-hidden my-5" style="border-color: var(--rule); background: var(--surface);">
+                <table class="w-full text-[14.5px]">
+                  <thead>
+                    <tr class="border-b text-[13px] font-medium" style="border-color: var(--rule); color: var(--ink-muted);">
+                      <th class="text-left px-4 md:px-5 py-3">Package</th>
+                      <th class="text-left px-4 md:px-5 py-3 hidden sm:table-cell">From sheets</th>
+                      <th class="text-right px-4 md:px-5 py-3">Estimate</th>
+                    </tr>
+                  </thead>
+                  <tbody id="convo-summary-tbody"></tbody>
+                  <tfoot>
+                    <tr class="border-t" style="border-color: var(--rule);">
+                      <td class="px-4 md:px-5 py-3 text-[14px]" style="color: var(--ink-muted);">Materials before tax · 21 groups</td>
+                      <td class="hidden sm:table-cell"></td>
+                      <td class="px-4 md:px-5 py-3 text-right mono text-[14px] font-semibold" id="convo-summary-total">—</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <p>I found <strong>3 things Shepley would otherwise call you about</strong>, so I answered or flagged them in the request: shingle colors aren't picked yet, the windows on sheet 4 need their own quote, and the stair railing needs a graspable handrail.</p>
+
+              <div class="flex flex-wrap items-center gap-2 mt-5">
+                <button onclick="openQuoteRequest('saidnawey', 'package')" class="pressable btn-primary text-[15px] font-medium px-5 py-2.5 rounded-full flex items-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                  <span>Review &amp; send to Shepley</span>
+                </button>
+                <button onclick="openScopeApp('saidnawey')" class="pressable btn-secondary text-[15px] font-medium px-5 py-2.5 rounded-full">Start sub scopes too</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="h-4"></div>
+      </section>
+    </div>
+
+    <!-- STICKY INPUT (chat thread) -->
+    <div id="sticky-input" class="hidden border-t px-4 md:px-6 py-5" style="border-color: var(--rule); background: var(--bg);">
+      <div class="max-w-[800px] mx-auto">
+        <div class="writing-surface rounded-[24px] border shadow-sm" style="background: var(--surface); border-color: var(--rule);">
+          <div class="px-5 pt-4 pb-2">
+            <input id="thread-input" onkeydown="if(event.key==='Enter'){event.preventDefault();threadReply();}" class="w-full text-[16px] outline-none bg-transparent placeholder:text-[var(--ink-muted)]" placeholder="Reply to Mullen AI" />
+          </div>
+          <div class="px-4 pb-3 pt-1 flex items-center justify-between">
+            <button class="pressable btn-ghost p-2.5 rounded-full" title="Attach">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button onclick="threadReply()" class="pressable btn-dark w-9 h-9 rounded-full flex items-center justify-center" title="Send">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="text-center text-[13px] mt-3" style="color: var(--ink-muted);">Mullen AI can make mistakes. Check the numbers before you send anything.</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===================== APP: SHEPLEY QUOTE REQUESTS ===================== -->
+  <section id="qr-view" class="app-view hidden fixed inset-0 z-20 flex flex-col" style="background: var(--bg);">
+    <div class="shrink-0 border-b" style="border-color: var(--rule);">
+      <div class="px-4 md:px-8 py-2.5 flex items-center justify-between gap-4">
+        <button onclick="qrBack()" class="pressable btn-ghost flex items-center gap-2 px-3 py-1.5 rounded-[8px] text-[14px] font-medium">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span id="qr-back-label">Back</span>
+        </button>
+        <button onclick="newQuoteRequest()" class="pressable btn-primary text-[14px] font-medium px-4 py-1.5 rounded-[8px] flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>New request</span>
+        </button>
+      </div>
+    </div>
+    <div id="qr-body" class="flex-1 overflow-y-auto scroll-hide app-pad px-8 py-6 pb-[140px]"></div>
+
+    <div id="qr-floating-chat" class="fixed left-0 right-0 bottom-6 px-4 md:px-6 z-30 pointer-events-none">
+      <div class="max-w-[720px] mx-auto pointer-events-auto">
+        <div class="writing-surface floating-chat-shadow rounded-[28px] border" style="background: var(--surface); border-color: var(--rule);">
+          <div class="px-5 pt-3.5 pb-2">
+            <input id="qr-chat-input" onkeydown="if(event.key==='Enter'){event.preventDefault();qrChatSubmit();}" class="w-full text-[16px] outline-none bg-transparent placeholder:text-[var(--ink-muted)]" placeholder="Drop a plan set, or ask about a quote…" />
+          </div>
+          <div class="px-3 pb-2.5 pt-0.5 flex items-center justify-between">
+            <button onclick="newQuoteRequest()" class="pressable btn-ghost p-2 rounded-full" title="Attach plans">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button onclick="qrChatSubmit()" class="pressable btn-dark w-9 h-9 rounded-full flex items-center justify-center" title="Send">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== APP: SCOPE AGENT ===================== -->
+  <section id="scope-view" class="app-view hidden fixed inset-0 z-20 flex flex-col" style="background: var(--bg);">
+    <div class="shrink-0 border-b" style="border-color: var(--rule);">
+      <div class="px-4 md:px-8 py-2.5 flex items-center justify-between gap-4">
+        <button onclick="scopeBack()" class="pressable btn-ghost flex items-center gap-2 px-3 py-1.5 rounded-[8px] text-[14px] font-medium">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span id="scope-back-label">Back</span>
+        </button>
+        <button onclick="focusScopeChat()" class="pressable btn-primary text-[14px] font-medium px-4 py-1.5 rounded-[8px] flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>New scope</span>
+        </button>
+
+      </div>
+    </div>
+    <div id="scope-body" class="flex-1 overflow-y-auto scroll-hide app-pad px-8 py-6 pb-[190px]"></div>
+
+    <div id="scope-floating-chat" class="hidden fixed left-0 right-0 bottom-6 px-4 md:px-6 z-30 pointer-events-none">
+      <div class="max-w-[720px] mx-auto pointer-events-auto">
+        <div id="scope-example" class="mb-3 flex flex-col items-start gap-1.5">
+          <div class="text-[11.5px] font-medium px-1" style="color: var(--ink-muted); letter-spacing: 0.4px;">TRY AN EXAMPLE</div>
+          <button onclick="runScopeExample()" class="pressable w-full text-left rounded-[14px] border px-4 py-2.5 text-[13.5px] leading-[1.5]" style="background: var(--surface); border-color: var(--rule); color: var(--ink-2);">
+            <span style="color: var(--ink-muted); font-weight: 500;">Ex.</span> <span style="color: var(--ink);">"New one, the Lindqvists in Cotuit. 14×20 sunroom off the kitchen on piers, cathedral ceiling, 3 skylights, tie into the existing hip roof, radiant floor, and they want it done by Memorial Day."</span>
+          </button>
+        </div>
+        <div class="writing-surface floating-chat-shadow rounded-[28px] border" style="background: var(--surface); border-color: var(--rule);">
+          <div class="px-5 pt-3.5 pb-2">
+            <input id="scope-chat-input" onkeydown="if(event.key==='Enter'){event.preventDefault();scopeChatSubmit();}" class="w-full text-[16px] outline-none bg-transparent placeholder:text-[var(--ink-muted)]" placeholder="Describe a new job, or ask about a bid…" />
+          </div>
+          <div class="px-3 pb-2.5 pt-0.5 flex items-center justify-between">
+            <button class="pressable btn-ghost p-2 rounded-full" title="Attach">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <div class="flex items-center gap-1">
+              <button class="pressable btn-ghost p-2 rounded-full" title="Dictate">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+              </button>
+              <button onclick="scopeChatSubmit()" class="pressable btn-dark w-9 h-9 rounded-full flex items-center justify-center" title="Send">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== APP: WEBSITE FORM WATCHER ===================== -->
+  <section id="forms-view" class="app-view hidden fixed inset-0 z-20 flex flex-col" style="background: var(--bg);">
+    <div class="shrink-0 border-b" style="border-color: var(--rule);">
+      <div class="px-4 md:px-8 py-2.5 flex items-center justify-between gap-4 border-b" style="border-color: var(--rule);">
+        <button onclick="closeApps()" class="pressable btn-ghost flex items-center gap-2 px-3 py-1.5 rounded-[8px] text-[14px] font-medium">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span>Back</span>
+        </button>
+        <button onclick="rerunForms()" class="pressable btn-secondary text-[14px] font-medium px-4 py-1.5 rounded-[8px] flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <span>Check now</span>
+        </button>
+      </div>
+      <div class="app-pad px-8 py-4">
+        <div class="max-w-[1200px] mx-auto">
+          <div class="text-[24px] font-semibold leading-tight">Website Form Watcher</div>
+          <div class="text-[14px] mt-1 leading-[1.55] max-w-[760px]" style="color: var(--ink-2);">
+            <span style="color: var(--ink); font-weight: 600;">What it does:</span> Reads every form sent from mullenbuilding.com/contact, looks up the person and the property, sorts real projects from clients, trades and spam, and drafts your reply.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex-1 overflow-y-auto scroll-hide app-pad px-8 py-6 pb-[120px]">
+      <div class="max-w-[1200px] mx-auto">
+        <p id="forms-summary" class="mb-8 max-w-[880px] text-[18px] md:text-[19px] leading-[1.65]" style="color: var(--ink-2);"></p>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <div id="forms-tabs" class="flex items-center gap-1 p-1 rounded-[12px] overflow-x-auto scroll-hide max-w-full" style="background: var(--sidebar);"></div>
+          <div class="flex items-center gap-2">
+            <button onclick="showToast('CSV downloaded')" class="pressable btn-secondary text-[14px] font-medium px-4 py-2 rounded-full">Download CSV</button>
+            <button onclick="sendAllLeads()" class="pressable btn-primary text-[14px] font-medium px-4 py-2 rounded-full">Reply to all leads</button>
+          </div>
+        </div>
+        <div id="forms-table" class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);"></div>
+      </div>
+    </div>
+    <div class="fixed left-0 right-0 bottom-6 px-4 md:px-6 z-30 pointer-events-none">
+      <div class="max-w-[720px] mx-auto pointer-events-auto">
+        <div class="writing-surface floating-chat-shadow rounded-[28px] border" style="background: var(--surface); border-color: var(--rule);">
+          <div class="px-5 pt-3.5 pb-2">
+            <input id="forms-chat-input" onkeydown="if(event.key==='Enter'){event.preventDefault();formsChatSubmit();}" class="w-full text-[16px] outline-none bg-transparent placeholder:text-[var(--ink-muted)]" placeholder="Ask about these leads, or change what counts as a good fit…" />
+          </div>
+          <div class="px-3 pb-2.5 pt-0.5 flex items-center justify-end">
+            <button onclick="formsChatSubmit()" class="pressable btn-dark w-9 h-9 rounded-full flex items-center justify-center" title="Send">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== APP: WEBSITE CHAT ===================== -->
+  <section id="chat-view" class="app-view hidden fixed inset-0 z-20 flex flex-col" style="background: var(--bg);">
+    <div class="shrink-0 border-b" style="border-color: var(--rule);">
+      <div class="px-4 md:px-8 py-2.5 flex items-center justify-between gap-4 border-b" style="border-color: var(--rule);">
+        <button onclick="closeApps()" class="pressable btn-ghost flex items-center gap-2 px-3 py-1.5 rounded-[8px] text-[14px] font-medium">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span>Back</span>
+        </button>
+        <div class="flex items-center gap-2">
+        <a href="website/" target="_blank" rel="noopener" class="pressable btn-primary text-[14px] font-medium px-4 py-1.5 rounded-[8px] hidden sm:flex items-center gap-2">See it on their website ↗</a>
+        <button onclick="showToast('Install snippet copied. Paste it before </body> on the site.')" class="pressable btn-secondary text-[14px] font-medium px-4 py-1.5 rounded-[8px] flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Install on site</span>
+        </button>
+        </div>
+      </div>
+      <div class="app-pad px-8 py-4">
+        <div class="max-w-[1200px] mx-auto">
+          <div class="text-[24px] font-semibold leading-tight">Website Chat</div>
+          <div class="text-[14px] mt-1 leading-[1.55] max-w-[760px]" style="color: var(--ink-2);">
+            <span style="color: var(--ink); font-weight: 600;">What it does:</span> A live assistant on mullenbuilding.com. It asks who each visitor is (homeowner, client, trade or vendor), answers from your own info, books site visits, and sends everyone to the right place.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="chat-scroll" class="flex-1 overflow-y-auto scroll-hide app-pad px-8 py-6 pb-[140px]">
+      <div class="max-w-[1200px] mx-auto">
+        <p id="chat-summary" class="mb-7 max-w-[880px] text-[18px] md:text-[19px] leading-[1.65]" style="color: var(--ink-2);"></p>
+        <div class="flex items-center gap-1 p-1 rounded-[12px] mb-5 w-fit max-w-full overflow-x-auto scroll-hide" style="background: var(--sidebar);">
+          <button data-chat-tab="leads" onclick="setChatTab('leads')" class="chat-tab tab-pill px-4 py-1.5 rounded-[9px] text-[14px] whitespace-nowrap" id="leads-tab-label">Leads</button>
+          <button data-chat-tab="settings" onclick="setChatTab('settings')" class="chat-tab tab-pill px-4 py-1.5 rounded-[9px] text-[14px] whitespace-nowrap">Chat settings</button>
+          <button data-chat-tab="preview" onclick="setChatTab('preview')" class="chat-tab tab-pill px-4 py-1.5 rounded-[9px] text-[14px] whitespace-nowrap">Preview on site</button>
+        </div>
+
+        <!-- LEADS -->
+        <div id="chat-leads">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <div id="lead-filters" class="flex items-center gap-1.5 flex-wrap"></div>
+            <div class="flex items-center gap-2">
+              <button id="clear-test-leads" onclick="clearTestLeads()" class="hidden pressable btn-ghost text-[13.5px] font-medium px-3 py-2 rounded-full">Clear test leads</button>
+              <button onclick="exportLeadsCsv()" class="pressable btn-secondary text-[14px] font-medium px-4 py-2 rounded-full">Download CSV</button>
+            </div>
+          </div>
+          <div id="chat-table" class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);"></div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="chat-settings" class="hidden"></div>
+
+        <!-- PREVIEW -->
+        <div id="chat-preview" class="hidden">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
+            <div class="text-[14px]" style="color: var(--ink-2);">This is the chat on the homepage, using your saved settings. Finish a chat here and it shows up under <a class="underline decoration-dotted cursor-pointer" onclick="setChatTab('leads')">Leads</a>.</div>
+            <a href="website/" target="_blank" rel="noopener" class="pressable btn-secondary text-[13.5px] font-medium px-4 py-2 rounded-full shrink-0 text-center">Open full page ↗</a>
+          </div>
+          <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: #fff;">
+            <iframe id="chat-frame" title="Mullen homepage with chat" style="width: 100%; height: max(560px, calc(100vh - 330px)); border: 0; display: block;"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="wc-floating-chat" class="fixed left-0 right-0 bottom-6 px-4 md:px-6 z-30 pointer-events-none">
+      <div class="max-w-[720px] mx-auto pointer-events-auto">
+        <div class="writing-surface floating-chat-shadow rounded-[28px] border" style="background: var(--surface); border-color: var(--rule);">
+          <div class="px-5 pt-3.5 pb-2">
+            <input id="wc-chat-input" onkeydown="if(event.key==='Enter'){event.preventDefault();wcChatSubmit();}" class="w-full text-[16px] outline-none bg-transparent placeholder:text-[var(--ink-muted)]" placeholder="Ask about your leads, or tell the chat what to say…" />
+          </div>
+          <div class="px-3 pb-2.5 pt-0.5 flex items-center justify-between">
+            <button class="pressable btn-ghost p-2 rounded-full" title="Attach"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+            <div class="flex items-center gap-1">
+              <button class="pressable btn-ghost p-2 rounded-full" title="Dictate"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></button>
+              <button onclick="wcChatSubmit()" class="pressable btn-dark w-9 h-9 rounded-full flex items-center justify-center" title="Send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSPECTOR DRAWER (shared) -->
+  <aside id="drawer" class="drawer closed fixed top-0 right-0 h-screen w-[480px] border-l z-40 flex flex-col" style="background: var(--surface); border-color: var(--rule); box-shadow: -14px 0 32px rgba(26, 23, 20, 0.08);">
+    <div class="px-6 py-5 border-b flex items-start justify-between gap-3" style="border-color: var(--rule);">
+      <div class="min-w-0">
+        <div class="text-[13px]" style="color: var(--ink-muted);" id="drawer-kicker">—</div>
+        <div class="text-[19px] font-semibold mt-1 truncate" id="drawer-name">—</div>
+        <div class="text-[14px] mt-0.5 truncate" id="drawer-sub" style="color: var(--ink-muted);">—</div>
+      </div>
+      <button onclick="closeDrawer()" class="pressable p-2 rounded-full shrink-0" style="color: var(--ink-muted);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div id="drawer-body" class="flex-1 overflow-y-auto px-6 py-6 space-y-7 scroll-hide"></div>
+    <div id="drawer-foot" class="px-6 py-4 border-t flex items-center gap-2" style="border-color: var(--rule); background: var(--bg);"></div>
+  </aside>
+
+  <!-- MODAL (shared) -->
+  <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-3 md:px-4">
+    <div class="absolute inset-0" style="background: rgba(26, 23, 20, 0.38);" onclick="closeModal()"></div>
+    <div id="modal-card" class="relative w-full max-w-[640px] max-h-[88vh] rounded-[20px] border flex flex-col fade-in" style="background: var(--surface); border-color: var(--rule); box-shadow: 0 20px 48px rgba(26, 23, 20, 0.18);"></div>
+  </div>
+
+  <!-- WISHLIST -->
+  <section id="wishlist-view" class="hidden fixed inset-0 z-40 flex flex-col" style="background: var(--bg);">
+    <div class="shrink-0 flex items-center justify-between px-6 md:px-8 py-5">
+      <div class="flex items-center gap-2.5">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--amber);"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8 19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2 19 5"/><path d="m3 21 9-9"/><path d="M12.2 6.2 11 5"/></svg>
+        <span class="text-[14px] font-medium" style="color: var(--ink-muted);">Wish List</span>
+      </div>
+      <button onclick="closeWishlist()" class="pressable p-2 rounded-full" style="color: var(--ink-muted);" title="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="flex-1 flex flex-col items-center justify-center px-6 pb-16">
+      <div id="wishlist-capture" class="w-full max-w-[720px] flex flex-col items-center">
+        <h2 class="serif text-center leading-[1.05]" style="font-weight: 400; font-size: clamp(40px, 5vw, 64px); letter-spacing: -0.022em;">What's slowing you down?</h2>
+        <p class="text-[15px] text-center mt-4 max-w-[540px]" style="color: var(--ink-muted);">Estimating, chasing subs, waiting on suppliers, client updates, paperwork. What eats your week that you'd like handled?</p>
+        <button id="wishlist-mic-btn" onclick="toggleWishlistMic()" class="pressable mt-14 w-[132px] h-[132px] rounded-full flex items-center justify-center" style="background: var(--accent); color: #fff; box-shadow: 0 14px 32px rgba(36, 66, 95, 0.28);" title="Tap to record">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+        </button>
+        <div id="wishlist-mic-label" class="mt-6 text-[15px] font-medium">Tap to record</div>
+        <div id="wishlist-mic-timer" class="hidden mono text-[14px] mt-1.5" style="color: var(--ink-muted);">00:00</div>
+        <button onclick="showWishlistType()" class="mt-8 text-[14px] underline decoration-dotted underline-offset-4" style="color: var(--ink-2);">Or type instead</button>
+      </div>
+      <div id="wishlist-type" class="hidden w-full max-w-[720px] flex flex-col items-center">
+        <h2 class="serif text-center leading-[1.05]" style="font-weight: 400; font-size: clamp(38px, 4.4vw, 56px); letter-spacing: -0.022em;">What's slowing you down?</h2>
+        <div class="w-full max-w-[640px] mt-10">
+          <div class="writing-surface rounded-[20px] border shadow-sm" style="background: var(--surface); border-color: var(--rule);">
+            <textarea id="wishlist-textarea" rows="6" class="w-full text-[17px] leading-[1.55] outline-none bg-transparent px-6 py-5 resize-none placeholder:text-[var(--ink-muted)]" placeholder="I wish I had a tool to …"></textarea>
+          </div>
+          <div class="mt-5 flex items-center justify-between">
+            <button onclick="showWishlistMic()" class="text-[14px] underline decoration-dotted underline-offset-4" style="color: var(--ink-2);">Record instead</button>
+            <button onclick="submitWishlist()" class="pressable btn-primary text-[15px] font-medium px-5 py-2.5 rounded-full">Continue</button>
+          </div>
+        </div>
+      </div>
+      <div id="wishlist-sent" class="hidden w-full max-w-[560px] flex flex-col items-center text-center">
+        <div class="w-16 h-16 rounded-full flex items-center justify-center" style="background: var(--accent-soft); color: var(--accent);">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2 class="serif mt-6" style="font-weight: 400; font-size: clamp(32px, 3.8vw, 44px); letter-spacing: -0.022em;">Got it, Doug.</h2>
+        <p class="text-[16px] mt-3 leading-[1.55]" style="color: var(--ink-2);">Saved to the wish list. <span class="mono text-[14px]" style="color: var(--ink-muted);">WL-0012</span> · Brent will take a look before your next call.</p>
+        <button onclick="closeWishlist()" class="pressable btn-primary mt-8 text-[15px] font-medium px-6 py-2.5 rounded-full">Done</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOUR TOOLTIP -->
+  <div id="tooltip" role="dialog" aria-live="polite">
+    <div id="tooltip-body"><span id="tooltip-text"></span><span id="tooltip-skip" onclick="endTour()" title="Skip">×</span></div>
+    <div id="tooltip-caret"></div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="hidden fixed bottom-8 right-4 md:right-8 left-4 md:left-auto fade-in z-[70]">
+    <div class="rounded-[14px] px-5 py-4 flex items-center gap-3 shadow-lg" style="background: var(--ink); color: var(--bg);">
+      <span style="color: var(--term-green);">✓</span>
+      <span id="toast-text" class="text-[14.5px]">Done.</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // =====================================================================
+  // Helpers
+  // =====================================================================
+  const $ = id => document.getElementById(id);
+  const usd = (n, d = 2) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const usd0 = n => usd(n, 0);
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const ICON = {
+    chevron: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+    back: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
+    pdf: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--red); flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+    sheet: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--green); flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>',
+    check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    flag: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+    spinner: '<span class="inline-block w-3.5 h-3.5 rounded-full border-2 spin shrink-0" style="border-color: var(--rule); border-top-color: var(--accent);"></span>',
+  };
+
+  function showToast(text) {
+    const t = $('toast');
+    $('toast-text').textContent = text;
+    t.classList.remove('hidden');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => t.classList.add('hidden'), 2600);
+  }
+
+  function termColor(c) {
+    return c === 'green' ? 'var(--term-green)' : c === 'amber' ? 'var(--term-amber)' : c === 'muted' ? 'var(--term-muted)' : 'var(--term-ink)';
+  }
+
+  // Streams scripted terminal lines into a container. Returns a promise resolved at the end.
+  function streamLines(el, lines, { instant = false, onLine } = {}) {
+    el.innerHTML = '';
+    return new Promise(resolve => {
+      lines.forEach((line, i) => {
+        const add = () => {
+          const div = document.createElement('div');
+          div.className = 'terminal-line';
+          div.innerHTML = line.blank ? '&nbsp;' : `<span style="color: ${termColor(line.color)}; white-space: pre;">${esc(line.s)}</span>`;
+          el.appendChild(div);
+          el.scrollTop = el.scrollHeight;
+          if (onLine) onLine(line, i);
+        };
+        if (instant) add(); else setTimeout(add, line.t);
+      });
+      setTimeout(resolve, instant ? 0 : lines[lines.length - 1].t + 300);
+    });
+  }
+
+  // =====================================================================
+  // Data — Shepley quote requests
+  // =====================================================================
+  // Group totals are from Shepley quote #0002860097 (Saidnawey, 9/4/26).
+  const SAIDNAWEY_GROUPS = [
+    { g: 'Foundation',            shepley: 3523.27,  ai: 3480,  sheets: '6',      spec: 'PT sill + plates, Bilco C door + extension, (4) 36" Areawall window wells' },
+    { g: 'Basement Walls',        shepley: 1665.80,  ai: 1720,  sheets: '3, 6',   spec: '2×4 / 2×6 SPF, PT bottom plates, bonus room + mech/storage' },
+    { g: '1st Floor EWP',         shepley: 16546.85, ai: 16420, sheets: '7',      spec: '11-7/8" BCI 90s + AJS-20, 1-3/4" LVL carriers, per EWP list' },
+    { g: '1st Floor Deck',        shepley: 3836.95,  ai: 3790,  sheets: '7',      spec: '3/4" AdvanTech T&G, subfloor adhesive' },
+    { g: '1st Floor Walls',       shepley: 12012.92, ai: 11900, sheets: '1, 7',   spec: '2×6 exterior @ 104-5/8" studs, 1/2" CDX, (3) pocket door frames w/ Sofstop' },
+    { g: '2nd Floor EWP',         shepley: 9131.06,  ai: 9420,  sheets: '8',      spec: 'AJS-20 11-7/8", LVL headers, VersaLam columns' },
+    { g: '2nd Floor Deck',        shepley: 3321.91,  ai: 3300,  sheets: '8',      spec: '3/4" AdvanTech T&G, subfloor adhesive' },
+    { g: '2nd Floor Walls',       shepley: 6614.73,  ai: 6480,  sheets: '2',      spec: '2×6 exterior / 2×4 interior, (3) pocket door frames' },
+    { g: '3rd Floor EWP',         shepley: 9811.70,  ai: 9700,  sheets: '8',      spec: '9-1/2" AJS20 attic floor, LVL beams to 52\'' },
+    { g: '3rd Floor Deck',        shepley: 3005.29,  ai: 2980,  sheets: '8',      spec: '3/4" AdvanTech T&G' },
+    { g: '3rd Floor Walls',       shepley: 2039.68,  ai: 2110,  sheets: '2',      spec: 'Attic kneewalls, under-eave storage' },
+    { g: 'Ceiling',               shepley: 3901.16,  ai: 3850,  sheets: '9',      spec: '2×10 ceiling joists, 1×3 strapping' },
+    { g: 'Roof',                  shepley: 16350.22, ai: 16280, sheets: '10',     spec: 'Gambrel: 2×10 / 2×12 rafters, 5/8" CDX, hurricane ties' },
+    { g: 'Roofing',               shepley: 12585.34, ai: 12500, sheets: '4, 5',   spec: 'CertainTeed Landmark Pro, WinterGuard, drip edge, lead flashing' },
+    { g: 'Exterior Trim',         shepley: 33184.92, ai: 32410, sheets: '4, 5, 9, 12', spec: 'Azek PVC trim, 4" + 5" crown, bed mould, beadboard, copper flashing' },
+    { g: 'Siding',                shepley: 23773.80, ai: 22980, sheets: '4, 5',   spec: 'White cedar shingles (bleaching oil) @ 5" exposure on HydroGap wrap' },
+    { g: 'Front Porch',           shepley: 18116.86, ai: 17650, sheets: '3, 11',  spec: '10" tapered columns, IPE decking, PT framing, Big-Foot footings' },
+    { g: 'Exterior Stoop',        shepley: 968.86,   ai: 990,   sheets: '3',      spec: 'PT framing, IPE decking' },
+    { g: 'Rear Stairs',           shepley: 1633.08,  ai: 1610,  sheets: '5',      spec: 'PT stringers, IPE treads' },
+    { g: 'Balcony Exterior Deck', shepley: 5344.37,  ai: 5410,  sheets: '4, 11, 12', spec: 'IPE decking, INTEX Hampton PVC rail, 36" high' },
+    { g: 'Hardware Allowance',    shepley: 12000.00, ai: 12000, sheets: '—',      spec: 'Allowance (fasteners, hangers, nails)' },
+  ];
+  const DELTA_NOTES = {
+    'Exterior Trim': 'Shepley added a 150\' copper flashing roll ($2,284) and 58 pcs of Azek beadboard for porch ceilings. Both are right per sheet 12. The estimate only caught the copper.',
+    'Siding': 'Shepley carries 158 bundles vs. 153 in the estimate (about 5% extra for waste at a 5" exposure). Reasonable for battered shingle details.',
+    '2nd Floor EWP': 'The estimate included an extra LVL header at the office. Shepley\'s EWP list is tighter.',
+  };
+
+  const SAIDNAWEY_FLAGS = [
+    { level: 'red',   title: 'Windows aren\'t in either quote', body: 'Sheet 4 calls for Andersen 400 Series units (window schedule A–K on sheet 3), but Shepley\'s frame quote and ext-door quote #2859245 don\'t include windows. Ask for a window quote now. Andersen lead times are running 6–8 weeks.', action: 'Draft window request' },
+    { level: 'red',   title: 'Rail kit fails the stair handrail requirement', body: 'Shepley\'s own note on the INTEX Hampton rail kit says it "does not meet graspable stair handrail req." The rear stairs and balcony stairs need a graspable handrail (780 CMR R311.7.8). Add a 1-1/2" round handrail line.', action: 'Add handrail line' },
+    { level: 'amber', title: 'Shingle colors still TBD', body: 'Landmark Pro field shingles and Shadow Ridge hip & ridge both say "COLOR TO BE DETERMINED." Confirm with the Saidnaweys before the order is released.', action: 'Ask the client' },
+    { level: 'amber', title: '55 SF of metal roofing is "done by others"', body: 'This isn\'t priced anywhere yet. It\'s probably the porch roof on sheet 4. It needs a sub price, so I added it to the Saidnawey roofing scope.', action: 'Open roofing scope' },
+    { level: 'amber', title: 'Porch brackets not priced', body: '2 × "Bracket TBD, not priced, done by others" (the entry hood on sheet 4). Pick a style or have the trim carpenter make them.', action: 'Note for trim sub' },
+    { level: 'muted', title: 'Quote expires Oct 4', body: 'Close date on quote 0002860097 is 10/04/26 (30 days from activation). Lumber pricing moves, so lock it in or ask Team Pina to extend.', action: 'Remind me Oct 1' },
+  ];
+
+  const QUOTE_REQUESTS = [
+    {
+      id: 'saidnawey', job: 'Saidnawey Residence', addr: '33 Hedge Row, West Yarmouth', scope: 'New build · 3 floors + basement · gambrel',
+      architect: 'ArchiPlicity (Jennifer Birnstiel)', planSet: 'Saidnawey_Progress_Binder_8.18.26.pdf', sheets: 13,
+      sent: 'Aug 18', status: 'received', days: 17, returned: 'Sep 4', shepleyQuote: '0002860097 + 2859245',
+      shepleyTotal: 227663.55, aiTotal: null,
+    },
+    {
+      id: 'whitcomb', job: 'Whitcomb Addition', addr: '14 Eel River Rd, Osterville', scope: '16×24 primary suite addition · 1.5 story',
+      architect: 'In-house sketch + Doug\'s notes', planSet: 'Whitcomb_Addition_Sketch_Set.pdf', sheets: 5,
+      sent: 'Sep 15', status: 'waiting', days: 10, aiTotal: 48240, shepleyTotal: null,
+    },
+    {
+      id: 'coleman', job: 'Coleman Kitchen + Mudroom', addr: '9 Old Post Rd, Cotuit', scope: 'Kitchen gut + 8×12 mudroom bump-out',
+      architect: 'Cape Design Studio', planSet: 'Coleman_Kitchen_Rev2.pdf', sheets: 7,
+      sent: 'Sep 22', status: 'waiting', days: 3, aiTotal: 12920, shepleyTotal: null,
+    },
+    {
+      id: 'hadley', job: 'Hadley deck rebuild (estate care)', addr: '31 Grand Island Dr, Osterville', scope: 'Replace 620 sf mahogany deck + rails',
+      architect: 'Field measure (Sep 23)', planSet: 'Hadley_Deck_Field_Notes.pdf', sheets: 2,
+      sent: null, status: 'draft', days: 0, aiTotal: 21450, shepleyTotal: null,
+    },
+  ];
+  QUOTE_REQUESTS[0].aiTotal = SAIDNAWEY_GROUPS.reduce((s, r) => s + r.ai, 0);
+
+  const QR_STREAM = [
+    { t: 80,   s: 'Reading Saidnawey_Progress_Binder_8.18.26.pdf', color: 'muted' },
+    { t: 260,  s: '', blank: true },
+    { t: 340,  s: 'Sheet 1    First floor plan: kitchen, dining, living, mudroom, garage', color: 'ink' },
+    { t: 560,  s: 'Sheet 2    Second + attic plans: 4 baths, office, roof deck', color: 'ink' },
+    { t: 780,  s: 'Sheet 3    Basement plan + window schedule A–K', color: 'ink' },
+    { t: 1000, s: 'Sheets 4-5 Elevations: gambrel, white cedar shingles, Azek trim, cupola', color: 'ink' },
+    { t: 1220, s: 'Sheet 6    Foundation: Bilco door, (4) Areawall window wells', color: 'ink' },
+    { t: 1440, s: 'Sheets 7-10 Framing: BCI / AJS joists, LVL carriers, 2x10 rafters', color: 'ink' },
+    { t: 1660, s: 'Sheets 11-13 Porch, balcony + eave details: IPE, Tuscan columns', color: 'ink' },
+    { t: 1840, s: '', blank: true },
+    { t: 1920, s: 'Building takeoff in Shepley\'s 21 groups', color: 'ink' },
+    { t: 2200, s: '  Foundation -> Balcony Deck -> Hardware allowance   21/21', color: 'green' },
+    { t: 2340, s: '', blank: true },
+    { t: 2420, s: 'Pricing against your last 12 Shepley quotes', color: 'ink' },
+    { t: 2740, s: '  Estimate: $197,000 materials before tax (+/- 4%)', color: 'green' },
+    { t: 2880, s: '', blank: true },
+    { t: 2960, s: 'Checking for gaps Shepley would call about', color: 'ink' },
+    { t: 3180, s: '  ! Shingle color not specified on sheet 4', color: 'amber' },
+    { t: 3360, s: '  ! Andersen 400 windows: need a separate window quote', color: 'amber' },
+    { t: 3540, s: '  ! Stair rail: spec a graspable handrail', color: 'amber' },
+    { t: 3700, s: '', blank: true },
+    { t: 3780, s: 'Drafting request to Team Pina (teampina@qxo.com)', color: 'ink' },
+    { t: 4060, s: 'Done. Package ready: 3 attachments.', color: 'green' },
+  ];
+
+  // =====================================================================
+  // Data — Scope agent
+  // =====================================================================
+  const SCOPES = [
+    {
+      id: 'whitcomb', job: 'Whitcomb Addition', client: 'James & Laura Whitcomb', addr: '14 Eel River Rd, Osterville',
+      summary: '16×24 1.5-story primary suite off the rear of a 1962 Cape. Full bath, walk-in closet, mini-split, and a shed dormer to match the existing house.',
+      source: 'Doug\'s voice memo (Sep 12) + 5-sheet sketch set + 38 site photos',
+      due: 'Bids due Oct 3', created: 'Sep 15', shepley: 'waiting', shepleyLabel: 'Waiting · day 10', sentOn: 'Sep 15',
+      trades: [
+        { t: 'Excavation & foundation', sub: 'Barnstable Site Works', prefilled: 14, total: 16, status: 'bid',    bid: 18400, when: 'Sep 19' },
+        { t: 'Framing',                 sub: 'Mullen crew (in-house)', prefilled: 19, total: 19, status: 'inhouse', bid: null, when: '—' },
+        { t: 'Roofing',                 sub: 'Tidewater Roofing',    prefilled: 12, total: 14, status: 'bid',    bid: 9850,  when: 'Sep 22' },
+        { t: 'Electrical',              sub: 'Crocker Electric',     prefilled: 17, total: 20, status: 'viewed', bid: null,  when: 'Viewed today 7:41 AM' },
+        { t: 'Plumbing',                sub: 'Nauset Plumbing & Heating', prefilled: 15, total: 18, status: 'bid', bid: 14200, when: 'Sep 23' },
+        { t: 'HVAC (mini-split)',       sub: 'Sandwich Mechanical',  prefilled: 11, total: 13, status: 'question', bid: null, when: 'Asked a question · 2h ago' },
+        { t: 'Insulation',              sub: 'Bayside Insulation',   prefilled: 9,  total: 10, status: 'bid',    bid: 6300,  when: 'Sep 18' },
+        { t: 'Drywall & plaster',       sub: 'Mashpee Drywall',      prefilled: 10, total: 11, status: 'sent',   bid: null,  when: 'Sent Sep 15' },
+        { t: 'Tile',                    sub: 'Cotuit Tile & Stone',  prefilled: 13, total: 16, status: 'bid',    bid: 11750, when: 'Sep 24' },
+      ],
+    },
+    {
+      id: 'coleman', job: 'Coleman Kitchen + Mudroom', client: 'Rachel Coleman', addr: '9 Old Post Rd, Cotuit',
+      summary: 'Full kitchen gut and an 8×12 mudroom bump-out on sonotubes. Moving the range to the island needs a new gas line and a downdraft.',
+      source: 'Cape Design Studio Rev 2 plans + walkthrough notes',
+      due: 'Bids due Oct 1', created: 'Sep 22', shepley: 'waiting', shepleyLabel: 'Waiting · day 3', sentOn: 'Sep 22',
+      trades: [
+        { t: 'Electrical', sub: 'Crocker Electric', prefilled: 15, total: 17, status: 'bid', bid: 8900, when: 'Sep 24' },
+        { t: 'Plumbing & gas', sub: 'Nauset Plumbing & Heating', prefilled: 12, total: 14, status: 'viewed', bid: null, when: 'Viewed yesterday' },
+        { t: 'Cabinet install', sub: 'Mullen crew (in-house)', prefilled: 11, total: 11, status: 'inhouse', bid: null, when: '—' },
+        { t: 'Countertops', sub: 'Cape Stone Fabricators', prefilled: 8, total: 10, status: 'sent', bid: null, when: 'Sent Sep 22' },
+        { t: 'Tile', sub: 'Cotuit Tile & Stone', prefilled: 9, total: 11, status: 'sent', bid: null, when: 'Sent Sep 22' },
+      ],
+    },
+    {
+      id: 'saidnawey', job: 'Saidnawey Residence', client: 'Saidnawey family', addr: '33 Hedge Row, West Yarmouth',
+      summary: 'New 3-story gambrel home with a finished basement, 4.5 baths, roof deck, covered porch and balcony. Built from the ArchiPlicity progress set.',
+      source: 'ArchiPlicity progress set (8/18) + Shepley quote 0002860097 (Sep 4)',
+      due: 'Ready for you to review', created: 'Sep 5', shepley: 'back', shepleyLabel: 'Back · Sep 4',
+      fromShepley: [
+        ['55 sf metal roof', 'Shepley marked it "done by others", so it went to Tidewater Roofing'],
+        ['2 porch brackets', 'Not priced by Shepley; noted for your crew on the trim work'],
+        ['Andersen 400 windows (A–K)', 'Not in either Shepley quote; window quote request drafted'],
+        ['Framing, trim & siding', 'Materials are on Shepley\'s quote, so your crew\'s labor is all that\'s left'],
+      ],
+      trades: [
+        { t: 'Excavation & foundation', sub: 'Barnstable Site Works', prefilled: 15, total: 17, status: 'draft', bid: null, when: 'Draft' },
+        { t: 'Roofing (incl. 55 sf metal)', sub: 'Tidewater Roofing', prefilled: 13, total: 15, status: 'draft', bid: null, when: 'Draft' },
+        { t: 'Electrical', sub: 'Crocker Electric', prefilled: 22, total: 26, status: 'draft', bid: null, when: 'Draft' },
+        { t: 'Plumbing', sub: 'Nauset Plumbing & Heating', prefilled: 20, total: 24, status: 'draft', bid: null, when: 'Draft' },
+        { t: 'HVAC', sub: 'Sandwich Mechanical', prefilled: 14, total: 18, status: 'draft', bid: null, when: 'Draft' },
+        { t: 'Insulation', sub: 'Bayside Insulation', prefilled: 11, total: 12, status: 'draft', bid: null, when: 'Draft' },
+        { t: 'Siding install', sub: 'Mullen crew (in-house)', prefilled: 12, total: 12, status: 'inhouse', bid: null, when: '—' },
+      ],
+    },
+  ];
+
+  // Pre-filled electrical scope, as the sub sees it
+  const ELECTRICAL_SCOPE = {
+    filled: [
+      ['Project', '16×24 primary suite addition, 1.5 story, 14 Eel River Rd, Osterville'],
+      ['Existing service', '200A panel (Square D, 2011) in basement. 6 open slots per site photo #14'],
+      ['Bedroom', 'AFCI circuits, 6 recessed 4" LEDs on dimmer, ceiling box for fan, 5 receptacles'],
+      ['Walk-in closet', '1 recessed LED on occupancy switch'],
+      ['Primary bath', '20A GFCI circuit, 4 recessed LEDs (wet-rated in shower), 2 vanity sconces, humidity-sensing exhaust fan'],
+      ['Heated floor', 'Electric radiant under tile, ~60 sf. Dedicated 20A circuit + programmable thermostat'],
+      ['Mini-split', 'Dedicated 240V circuit + disconnect for 1 head (HVAC sub sets the unit)'],
+      ['Exterior', '2 sconces at the new rear door (fixtures by owner), 1 GFCI weatherproof receptacle'],
+      ['Smoke / CO', 'Hardwired and interconnected with the existing system'],
+      ['Schedule', 'Rough-in week of Nov 3, after framing inspection. Final by Dec 12'],
+      ['Permit', 'Sub pulls the electrical permit (Town of Barnstable)'],
+    ],
+    open: [
+      'Can the existing 200A panel carry the heated floor + mini-split, or does it need a subpanel?',
+      'Any concern running the feed through the finished family room ceiling (photo #22)?',
+      'Your price, and how long it\'s good for',
+    ],
+  };
+
+  const SCOPE_STREAM = [
+    { t: 80,   s: 'New scope: Lindqvist sunroom, Cotuit', color: 'muted' },
+    { t: 260,  s: '', blank: true },
+    { t: 340,  s: 'Reading your description', color: 'ink' },
+    { t: 620,  s: '  14x20 sunroom on piers, cathedral ceiling, 3 skylights', color: 'muted' },
+    { t: 800,  s: '  Tie into existing hip roof, radiant floor, done by Memorial Day', color: 'muted' },
+    { t: 980,  s: '', blank: true },
+    { t: 1060, s: 'Picking trades from your past sunroom jobs', color: 'ink' },
+    { t: 1340, s: '  Foundation (piers), Framing, Roofing, Windows/skylights,', color: 'green' },
+    { t: 1480, s: '  Electrical, Plumbing (radiant), Insulation, Drywall', color: 'green' },
+    { t: 1640, s: '', blank: true },
+    { t: 1720, s: 'Pre-filling each scope with your specs + Cape code notes', color: 'ink' },
+    { t: 2000, s: '  8 scopes, 104 of 121 fields filled', color: 'green' },
+    { t: 2160, s: '  17 questions left for subs (panel capacity, pier depth...)', color: 'amber' },
+    { t: 2320, s: '', blank: true },
+    { t: 2400, s: 'Choosing subs from your list (Cotuit area, active COI)', color: 'ink' },
+    { t: 2680, s: 'Done. 8 scopes drafted. Review, then send.', color: 'green' },
+  ];
+
+  // =====================================================================
+  // Data — Website form watcher
+  // =====================================================================
+  const FORMS = [
+    { id: 'F1', name: 'Katherine Lowell', email: 'klowell@…', town: 'Osterville', addr: '212 Wianno Ave, Osterville', kind: 'lead', fit: 'high',
+      received: 'Today 11:02 AM', project: 'Whole-house renovation + possible addition',
+      message: 'We bought my parents\' house on Wianno Ave and want to do a full renovation, maybe add a primary suite. Hoping to start after Labor Day next year. Would love to meet.',
+      prop: { owner: 'Lowell Family Trust (K. Lowell, trustee)', match: true, assessed: '$4,120,000', built: '1924', sf: '5,140', lot: '0.92 ac', lastSale: 'Deeded to trust Jun 2026', zoning: 'RF-1', notes: 'Inside the Wianno Historic District. Exterior changes go to the Old King\'s Highway / historic review.' },
+      est: '$1.2M–1.8M', next: 'Book a walkthrough. Mention historic review experience and the Seapuit Rd project.' },
+    { id: 'F2', name: 'Mark & Priya Desai', email: 'pdesai@…', town: 'Osterville', addr: 'Lot 7 Seapuit River Rd, Osterville', kind: 'lead', fit: 'high',
+      received: 'Today 8:47 AM', project: 'New custom home on vacant lot',
+      message: 'Closed on a lot on Seapuit River Rd this summer. Looking for a builder for a ~4,500 sf home. We have an architect lined up.',
+      prop: { owner: 'Desai, Mark & Priya', match: true, assessed: '$1,640,000 (land)', built: 'Vacant', sf: '—', lot: '1.4 ac', lastSale: '$1,950,000 · Jun 2026', zoning: 'RF-1', notes: 'Flood zone AE on the waterside third of the lot. Conservation Commission filing likely.' },
+      est: '$2.5M–3.2M', next: 'Ask for the architect\'s name. Offer a preconstruction meeting.' },
+    { id: 'F3', name: 'Tom Brennan', email: 'tbrennan@…', town: 'Cotuit', addr: '45 Main St, Cotuit', kind: 'lead', fit: 'medium',
+      received: 'Yesterday 4:15 PM', project: 'Kitchen + primary bath remodel',
+      message: 'Looking to redo our kitchen and primary bath this winter. Budget around $150k. Can you do winter work?',
+      prop: { owner: 'Brennan, Thomas J.', match: true, assessed: '$1,310,000', built: '1987', sf: '2,640', lot: '0.51 ac', lastSale: '$915,000 · 2019', zoning: 'RF', notes: 'Pulled a roofing permit in 2023. No open permits.' },
+      est: '$140K–180K', next: 'Good winter fill-in job. Send the remodel gallery and offer a site visit next week.' },
+    { id: 'F4', name: 'Susan Hale', email: 'shale@…', town: 'Mashpee', addr: '18 Shoestring Bay Rd, Mashpee (New Seabury)', kind: 'lead', fit: 'medium',
+      received: 'Yesterday 9:30 AM', project: 'Deck rebuild + screened porch',
+      message: 'Our deck is rotting and we want to add a screened porch. Also interested in someone to keep an eye on the house in the winter.',
+      prop: { owner: 'Hale, Susan R.', match: true, assessed: '$1,780,000', built: '1998', sf: '3,120', lot: '0.44 ac', lastSale: '$1,240,000 · 2015', zoning: 'R-3', notes: 'Seasonal owner (primary address in Wellesley). Good fit for estate care too.' },
+      est: '$85K–120K + estate care', next: 'Pitch deck + porch together, and add an estate care plan.' },
+    { id: 'F5', name: 'Dan Ruiz', email: 'druiz@…', town: 'Centerville', addr: '77 Craigville Beach Rd, Centerville', kind: 'lead', fit: 'low',
+      received: 'Mon 2:05 PM', project: 'Remodel quote (renter)',
+      message: 'Want a quote to redo the bathroom in the place I\'m renting.',
+      prop: { owner: 'Craigville Holdings LLC', match: false, assessed: '$960,000', built: '1955', sf: '1,480', lot: '0.25 ac', lastSale: '$870,000 · 2021', zoning: 'RB', notes: 'The name doesn\'t match the owner of record. Probably a tenant, so we\'d need the owner\'s approval.' },
+      est: '—', next: 'Polite reply asking him to have the property owner reach out.' },
+    { id: 'F6', name: 'James Whitcomb', email: 'jwhitcomb@…', town: 'Osterville', addr: '14 Eel River Rd, Osterville', kind: 'client', fit: 'client',
+      received: 'Today 9:12 AM', project: 'Current project: Whitcomb Addition',
+      message: 'Quick question: could we move the closet door to the other wall? Laura changed her mind.',
+      prop: { owner: 'Whitcomb, James & Laura', match: true, assessed: '$1,450,000', built: '1962', sf: '1,980', lot: '0.62 ac', lastSale: '$1,050,000 · 2018', zoning: 'RF-1', notes: 'Active job. Framing starts Oct 13.' },
+      est: 'Change order', next: 'Routed to Doug. Drafted a change order for the door move ($0 before framing).' },
+    { id: 'F7', name: 'Ellen Carver', email: 'ecarver@…', town: 'Oyster Harbors', addr: '5 Oyster Harbors Rd, Osterville', kind: 'client', fit: 'client',
+      received: 'Sun 6:40 PM', project: 'Estate care client',
+      message: 'Can someone check the house after the storm? We\'re in Florida until November.',
+      prop: { owner: 'Carver Residence Trust', match: true, assessed: '$6,850,000', built: '2004', sf: '7,200', lot: '2.1 ac', lastSale: '—', zoning: 'RF-1', notes: 'Estate care plan: weekly checks. Last check Sep 19.' },
+      est: 'Estate care', next: 'Scheduled a storm check for Tuesday. Photos go to Ellen automatically.' },
+    { id: 'F8', name: 'Kevin O\'Neil, O\'Neil Painting', email: 'kevin@…', town: 'Falmouth', addr: 'Falmouth, MA', kind: 'trade', fit: 'trade',
+      received: 'Mon 7:55 AM', project: 'Wants to join the sub list',
+      message: 'Painting contractor, 12 years on the Cape, fully insured. Would like to bid your interior/exterior work.',
+      prop: { owner: 'Business: O\'Neil Painting LLC', match: true, assessed: '—', built: '—', sf: '—', lot: '—', lastSale: '—', zoning: '—', notes: 'MA HIC registration active. Google rating 4.8 (61 reviews). No COI on file yet.' },
+      est: 'Trade partner', next: 'Send the sub onboarding link (COI + W-9). Add to the painting list for Coleman.' },
+    { id: 'F9', name: 'Marvin rep, Coastal Windows', email: 'sales@…', town: '—', addr: '—', kind: 'trade', fit: 'trade',
+      received: 'Sun 10:10 AM', project: 'Vendor intro',
+      message: 'Would love to show you our new coastal-rated line. Lunch and learn?',
+      prop: { owner: 'Business: Coastal Windows & Doors', match: true, assessed: '—', built: '—', sf: '—', lot: '—', lastSale: '—', zoning: '—', notes: 'Vendor. Useful given the Saidnawey window gap.' },
+      est: 'Vendor', next: 'Filed under vendors. Maybe useful: Saidnawey still needs a window quote.' },
+    { id: 'F10', name: 'SEO Growth Team', email: 'rank@…', town: '—', addr: '—', kind: 'spam', fit: 'spam',
+      received: 'Today 3:12 AM', project: 'Spam',
+      message: 'We can get Mullen Building to #1 on Google in 30 days!!!',
+      prop: null, est: '—', next: 'Archived.' },
+    { id: 'F11', name: 'noreply-promo', email: 'promo@…', town: '—', addr: '—', kind: 'spam', fit: 'spam',
+      received: 'Sat 1:44 AM', project: 'Spam',
+      message: 'Exclusive offer for business owners…',
+      prop: null, est: '—', next: 'Archived.' },
+  ];
+
+  // =====================================================================
+  // Data — Website chat conversations
+  // =====================================================================
+  const CHATS = [
+    { id: 'C1', who: 'Mark & Priya Desai', kind: 'lead', topic: 'New home on a waterfront lot', outcome: 'Site visit booked · Thu 10 AM', when: 'Today 10:14 AM', needsYou: false,
+      rows: [['Project', 'New custom home'], ['Town', 'Osterville'], ['Size', '3,000–4,500 sf'], ['Start', 'Next year'], ['Ballpark', '$2,450K – $3,600K'], ['Design', 'Has an architect'], ['Site visit', 'Thu 10:00 AM'], ['Contact', 'pdesai@… · 617-555-0148']],
+      transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','Planning a new project'],['bot','Great. What kind of project?'],['user','New custom home'],['bot','Where\'s the property?'],['user','Osterville, on the water'],['bot','We\'ve built 11 homes in Osterville. Timeline?'],['user','Break ground next spring'],['bot','Doug can walk the lot with you. Thursday 10 AM or Friday 2 PM?'],['user','Thursday'],['bot','Booked! Confirmation sent. Doug will bring examples of waterfront work.']] },
+    { id: 'C2', who: 'Laura Whitcomb', kind: 'client', topic: 'When do roofers start?', outcome: 'Answered from schedule', when: 'Today 8:02 AM', needsYou: false,
+      transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','I\'m a current client'],['bot','Welcome back. I sent a 6-digit code to the email on file.'],['user','482913'],['bot','Thanks, Laura. What can I help with on the Whitcomb Addition?'],['user','When do the roofers start?'],['bot','Tidewater Roofing is scheduled for Mon Oct 20, right after framing. Want Doug to call you?'],['user','No that\'s perfect, thanks']] },
+    { id: 'C3', who: 'Crocker Electric', kind: 'trade', topic: 'Question on Whitcomb electrical scope', outcome: 'Opened pre-filled scope', when: 'Today 7:39 AM', needsYou: false,
+      transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','I\'m a contractor'],['bot','Are you bidding on a current scope, or want to join our sub list?'],['user','Bidding, Whitcomb electrical'],['bot','Here\'s your scope. 17 of 20 items are filled in; 3 questions are left for you. [Open scope]']] },
+    { id: 'C4', who: 'Tom Brennan', kind: 'lead', topic: 'Kitchen remodel pricing', outcome: 'Wants a call back', when: 'Yesterday 7:48 PM', needsYou: true,
+      rows: [['Project', 'Kitchen or bath'], ['Town', 'Cotuit'], ['Ballpark', '$120K – $250K'], ['Budget fit', 'In range'], ['Contact', 'tbrennan@…']],
+      transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','How much does a kitchen remodel cost?'],['bot','It depends on size and finishes. Recent Mullen kitchens have run $120K–$250K. Want a site visit for a real number?'],['user','Sure'],['bot','What\'s the best email?'],['user','tbrennan@…'],['bot','Thanks, Tom. Doug\'s office will reach out tomorrow.']] },
+    { id: 'C5', who: 'Ellen Carver', kind: 'client', topic: 'Storm check request', outcome: 'Needs Doug: after-hours request', when: 'Sun 6:31 PM', needsYou: true,
+      transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','I\'m a current client'],['bot','Welcome back. I sent a code to the email on file.'],['user','771204'],['bot','Thanks, Ellen. What can I help with?'],['user','Can someone check the house after the storm?'],['bot','Yes. I\'ve flagged it for Doug and put in a check for Tuesday morning. You\'ll get photos when it\'s done.']] },
+    { id: 'C6', who: 'Karen Liu', kind: 'lead', topic: 'Addition over garage', outcome: 'Site visit booked · Mon 3 PM', when: 'Sat 11:20 AM', needsYou: false,
+      rows: [['Project', 'Addition'], ['Town', 'Sandwich'], ['New space', 'Second floor'], ['Size', 'About 400 sf'], ['Ballpark', '$150K – $225K'], ['Site visit', 'Mon 3:00 PM'], ['Contact', 'kliu@…']],
+      transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','Planning a new project'],['bot','What kind of project?'],['user','Addition over our garage'],['bot','Nice. We do a lot of those. Monday 3 PM work for a site visit?'],['user','Yes']] },
+    { id: 'C7', who: 'O\'Neil Painting', kind: 'trade', topic: 'Join the sub list', outcome: 'COI + W-9 requested', when: 'Mon 7:50 AM', needsYou: false,
+      transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','I\'m a contractor'],['bot','Bidding a current scope, or joining our sub list?'],['user','Join the sub list, painting'],['bot','Great. Upload your COI and W-9 here and we\'ll add you to the painting list.']] },
+    { id: 'C8', who: 'Visitor', kind: 'other', topic: 'Job application: carpenter', outcome: 'Needs Doug: resume attached', when: 'Fri 5:12 PM', needsYou: true,
+      transcript: [['bot','Hi! What brings you to Mullen Building today?'],['user','Something else'],['bot','Sure. What can I help with?'],['user','Are you hiring carpenters?'],['bot','Mullen is always looking for good carpenters. Leave your name and upload a resume and I\'ll pass it to Doug.']] },
+  ];
+
+  // =====================================================================
+  // Home: workflows
+  // =====================================================================
+  const WORKFLOWS = [
+    { key: 'scope', name: 'Scope Agent',            sub: 'Describe a job, send scopes to your subs', dot: 'var(--amber)',  stats: 'Whitcomb addition · <strong>8</strong> subs', open: () => openScopeApp() },
+    { key: 'chat',  name: 'Website Chat',           sub: 'Live on mullenbuilding.com',              dot: '#6B5B95',       stats: 'Leads + settings', open: () => openChatApp() },
+    { key: 'qr',    name: 'Shepley Quote Requests', sub: 'Plan set → takeoff request + estimate', dot: 'var(--accent)', stats: '<strong>1</strong> back from Shepley · <strong>2</strong> waiting', open: () => openQrApp() },
+  ];
+  function renderWorkflows() {
+    $('workflow-list').innerHTML = WORKFLOWS.map(w => `
+      <button data-wf="${w.key}" onclick="openWorkflow('${w.key}')" class="workflow-card w-full flex items-start md:items-center gap-3 md:gap-4 px-4 py-3.5 rounded-[14px] border text-left" style="background: var(--surface); border-color: var(--rule);">
+        <span class="w-2 h-2 rounded-full shrink-0 mt-2 md:mt-0" style="background: ${w.dot};"></span>
+        <div class="min-w-0 flex-1 flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+          <div class="min-w-0 flex items-center gap-2 flex-1">
+            <span class="text-[15px] font-semibold">${w.name}</span>
+            <span class="text-[14px] hidden md:inline" style="color: var(--ink-muted);">·</span>
+            <span class="text-[14px] truncate hidden md:inline" style="color: var(--ink-muted);">${w.sub}</span>
+          </div>
+          <div class="text-[13px] md:text-[13.5px] shrink-0 [&_strong]:text-[var(--ink)] [&_strong]:font-semibold" style="color: var(--ink-muted);">${w.stats}</div>
+        </div>
+        <span class="shrink-0 mt-1 md:mt-0" style="color: var(--ink-muted);">${ICON.chevron}</span>
+      </button>`).join('');
+  }
+  function openWorkflow(key) { const w = WORKFLOWS.find(x => x.key === key); if (w) w.open(); }
+
+  // =====================================================================
+  // Navigation
+  // =====================================================================
+  function closeApps() {
+    document.querySelectorAll('.app-view').forEach(v => v.classList.add('hidden'));
+    closeDrawer();
+  }
+  function hideMainViews() {
+    ['hero', 'conversation', 'scope-conversation', 'thread-header', 'sticky-input'].forEach(id => $(id).classList.add('hidden'));
+  }
+  function goHome() {
+    closeApps();
+    hideMainViews();
+    $('hero').classList.remove('hidden');
+  }
+  function showApp(id) {
+    // The tour only continues into the Shepley app; any other route ends it
+    if (tourStep && id !== 'scope-view') endTour();
+    closeApps();
+    const v = $(id);
+    v.classList.remove('hidden');
+    v.classList.add('fade-in');
+  }
+
+  // =====================================================================
+  // Conversation: Shepley request from plan set
+  // =====================================================================
+  function attachPlanSet() {
+    $('hero-attachment').classList.remove('hidden');
+    $('hero-attachment').classList.add('inline-flex');
+    const el = $('hero-input');
+    if (!el.textContent.trim()) el.textContent = 'Put together the Shepley takeoff request for the Saidnawey house and give me a ballpark.';
+  }
+
+  function runFromHero() {
+    const t = ($('hero-input').textContent || '').toLowerCase();
+    if (/\b(shepley|takeoff|plan set|lumber)/.test(t) || !$('hero-attachment').classList.contains('hidden')) return runConversation(false);
+    if (/\b(form|lead|leads|inquir)/.test(t)) return openChatApp('leads');
+    if (/\b(chat|widget|website|visitor)/.test(t)) return openChatApp();
+    runScopeConversation(false);
+  }
+
+  function renderConvoSummary() {
+    const top = [...SAIDNAWEY_GROUPS].sort((a, b) => b.ai - a.ai).slice(0, 6);
+    $('convo-summary-tbody').innerHTML = top.map(r => `
+      <tr class="border-t" style="border-color: var(--rule);">
+        <td class="px-4 md:px-5 py-3"><div class="font-medium">${r.g}</div><div class="text-[12.5px] mt-0.5 sm:hidden" style="color: var(--ink-muted);">${r.spec}</div></td>
+        <td class="px-4 md:px-5 py-3 text-[13px] hidden sm:table-cell" style="color: var(--ink-muted);">Sheet ${r.sheets} · ${r.spec}</td>
+        <td class="px-4 md:px-5 py-3 text-right mono text-[13.5px]">${usd0(r.ai)}</td>
+      </tr>`).join('') + `
+      <tr class="border-t" style="border-color: var(--rule);"><td class="px-4 md:px-5 py-3 text-[13.5px]" style="color: var(--ink-muted);" colspan="3">+ 15 more groups · <a class="underline decoration-dotted cursor-pointer" onclick="openQuoteRequest('saidnawey','package')">see all</a></td></tr>`;
+    $('convo-summary-total').textContent = usd0(QUOTE_REQUESTS[0].aiTotal);
+  }
+
+  let convoRunning = false;
+  function runConversation(instant) {
+    if (convoRunning) return;
+    endTour();
+    closeApps();
+    hideMainViews();
+    ['conversation', 'thread-header', 'sticky-input'].forEach(id => $(id).classList.remove('hidden'));
+    $('thread-title').textContent = 'Shepley request — Saidnawey Residence';
+    renderConvoSummary();
+    $('convo-result').classList.add('hidden');
+    const dot = $('terminal-dot'), status = $('terminal-status');
+    if (instant) {
+      streamLines($('stream'), QR_STREAM, { instant: true });
+      dot.classList.remove('pulse-dot');
+      status.innerHTML = '<span style="color: var(--green);">complete · 3m 48s</span>';
+      $('convo-result').classList.remove('hidden');
+      return;
+    }
+    convoRunning = true;
+    dot.classList.add('pulse-dot');
+    status.innerHTML = '<span id="timer">00:00</span>';
+    const start = Date.now();
+    const tick = setInterval(() => { const s = Math.floor((Date.now() - start) / 1000); const el = $('timer'); if (el) el.textContent = '00:' + String(s).padStart(2, '0'); }, 400);
+    streamLines($('stream'), QR_STREAM, { onLine: () => { $('scroll-area').scrollTop = $('scroll-area').scrollHeight; } }).then(() => {
+      clearInterval(tick);
+      dot.classList.remove('pulse-dot');
+      status.innerHTML = '<span style="color: var(--green);">complete</span>';
+      $('convo-result').classList.remove('hidden');
+      $('convo-result').classList.add('fade-in');
+      $('scroll-area').scrollTop = $('scroll-area').scrollHeight;
+      convoRunning = false;
+    });
+  }
+  function showConversation() { runConversation(true); }
+
+  const SC_STREAM = [
+    { t: 80,   s: 'Reading Whitcomb_Sketch_Set.pdf (5 sheets) + 38 photos', color: 'muted' },
+    { t: 260,  s: '', blank: true },
+    { t: 340,  s: 'Existing house: 1962 Cape, 1,980 sf, full basement', color: 'ink' },
+    { t: 560,  s: '  Photo 14: Square D 200A panel (2011), 6 open slots', color: 'muted' },
+    { t: 740,  s: '  Photo 22: finished family room ceiling below run path', color: 'muted' },
+    { t: 920,  s: '  Photo 31: north wall clear 9\' for mini-split condenser', color: 'muted' },
+    { t: 1100, s: 'Addition: 16x24, 1.5 story, primary suite + bath + WIC', color: 'ink' },
+    { t: 1280, s: '', blank: true },
+    { t: 1360, s: 'Picking trades (from your last 6 additions)', color: 'ink' },
+    { t: 1640, s: '  9 trades: foundation, framing, roofing, electrical,', color: 'green' },
+    { t: 1780, s: '  plumbing, HVAC, insulation, drywall, tile', color: 'green' },
+    { t: 1940, s: '', blank: true },
+    { t: 2020, s: 'Filling scopes with Mullen standard specs', color: 'ink' },
+    { t: 2300, s: '  120 of 137 fields filled (88%)', color: 'green' },
+    { t: 2460, s: '  17 questions left for subs', color: 'amber' },
+    { t: 2600, s: '', blank: true },
+    { t: 2680, s: 'Choosing subs: Osterville area, COI on file', color: 'ink' },
+    { t: 2900, s: '  Framing stays in-house (Mullen crew)', color: 'muted' },
+    { t: 3060, s: 'Done. 9 scopes drafted, 8 ready to send.', color: 'green' },
+  ];
+  let scRunning = false;
+  function runScopeConversation(instant) {
+    if (scRunning) return;
+    endTour();
+    closeApps();
+    hideMainViews();
+    ['scope-conversation', 'thread-header', 'sticky-input'].forEach(id => $(id).classList.remove('hidden'));
+    $('thread-title').textContent = 'Sub scopes — Whitcomb addition';
+    const s = SCOPES.find(x => x.id === 'whitcomb');
+    $('sc-tbody').innerHTML = s.trades.map(t => `
+      <tr class="border-t" style="border-color: var(--rule);">
+        <td class="px-4 md:px-5 py-3"><div class="font-medium">${t.t}</div><div class="text-[12.5px] mt-0.5 sm:hidden" style="color: var(--ink-muted);">${t.sub}</div></td>
+        <td class="px-4 md:px-5 py-3 text-[14px] hidden sm:table-cell" style="color: var(--ink-2);">${t.sub}</td>
+        <td class="px-4 md:px-5 py-3 text-right mono text-[13px]">${t.prefilled}/${t.total}</td>
+      </tr>`).join('');
+    $('sc-result').classList.add('hidden');
+    const dot = $('sc-dot'), status = $('sc-status');
+    if (instant) {
+      streamLines($('sc-stream'), SC_STREAM, { instant: true });
+      dot.classList.remove('pulse-dot');
+      status.innerHTML = '<span style="color: var(--green);">complete · 1m 12s</span>';
+      $('sc-result').classList.remove('hidden');
+      return;
+    }
+    scRunning = true;
+    dot.classList.add('pulse-dot');
+    const start = Date.now();
+    const tick = setInterval(() => { status.textContent = '00:' + String(Math.floor((Date.now() - start) / 1000)).padStart(2, '0'); }, 400);
+    streamLines($('sc-stream'), SC_STREAM, { onLine: () => { $('scroll-area').scrollTop = $('scroll-area').scrollHeight; } }).then(() => {
+      clearInterval(tick);
+      dot.classList.remove('pulse-dot');
+      status.innerHTML = '<span style="color: var(--green);">complete</span>';
+      $('sc-result').classList.remove('hidden');
+      $('sc-result').classList.add('fade-in');
+      $('scroll-area').scrollTop = $('scroll-area').scrollHeight;
+      scRunning = false;
+    });
+  }
+  function sendScopesFromChat() { openScopeApp('whitcomb'); }
+
+  function threadReply() {
+    const i = $('thread-input'); const v = i.value.trim(); if (!v) return;
+    i.value = '';
+    showToast('In the full build, Mullen AI answers here with your job data.');
+  }
+
+  // =====================================================================
+  // App: Shepley quote requests
+  // =====================================================================
+  let qrState = { view: 'list', id: null, tab: 'package' };
+
+  function openQrApp() { showApp('qr-view'); qrState = { view: 'list', id: null, tab: 'package' }; renderQr(); }
+  function openQuoteRequest(id, tab) {
+    showApp('qr-view');
+    const qr = QUOTE_REQUESTS.find(q => q.id === id);
+    qrState = { view: 'detail', id, tab: tab || (qr && qr.status === 'received' ? 'compare' : 'package') };
+    renderQr();
+  }
+  function qrBack() {
+    if (qrState.view === 'detail') { qrState.view = 'list'; renderQr(); }
+    else closeApps();
+  }
+  function qrStatusBadge(q) {
+    if (q.status === 'received') return `<span class="badge b-green">Back from Shepley · ${q.days} days</span>`;
+    if (q.status === 'waiting')  return `<span class="badge b-amber">Waiting · day ${q.days}</span>`;
+    if (q.status === 'building') return `<span class="badge b-muted inline-flex items-center gap-2">${ICON.spinner}Reading plans…</span>`;
+    return `<span class="badge b-accent">Draft · ready to send</span>`;
+  }
+
+  function renderQr() {
+    $('qr-back-label').textContent = qrState.view === 'detail' ? 'All requests' : 'Back';
+    $('qr-chat-input').placeholder = qrState.view === 'detail' ? 'Ask about this quote, or have me follow up with Team Pina…' : 'Drop a plan set, or ask about a quote…';
+    if (qrState.view === 'detail') return renderQrDetail();
+    const waiting = QUOTE_REQUESTS.filter(q => q.status === 'waiting').length;
+    $('qr-body').innerHTML = `
+      <div class="max-w-[1200px] mx-auto">
+        <div class="mb-5">
+          <div class="text-[24px] font-semibold leading-tight">Shepley Quote Requests</div>
+          <div class="text-[14px] mt-1 leading-[1.55] max-w-[780px]" style="color: var(--ink-2);"><span style="color: var(--ink); font-weight: 600;">What it does:</span> Turns an architect's plan set into a complete takeoff request for Shepley, in the groups they quote in. It also gives you a material estimate in minutes, so you can price the job while Shepley does the formal quote.</div>
+        </div>
+        <p class="mb-8 max-w-[880px] text-[18px] md:text-[19px] leading-[1.65]" style="color: var(--ink-2);">
+          You have <span class="num">${QUOTE_REQUESTS.length} quote requests</span> open. Shepley has sent back <span class="num filter-link" onclick="openQuoteRequest('saidnawey','compare')">1</span> (Saidnawey, <strong style="color: var(--ink);">17 days</strong>), and <span class="num">${waiting}</span> are still waiting.
+          <span class="block mt-3">This year the estimate has come within <strong style="color: var(--ink);">4%</strong> of Shepley's final number on <strong style="color: var(--ink);">11 of 12</strong> jobs.</span>
+        </p>
+        <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
+          <table class="w-full text-[15px] hidden md:table">
+            <thead><tr class="border-b text-[13px] font-medium" style="border-color: var(--rule); color: var(--ink-muted);">
+              <th class="text-left px-5 py-3.5">Job</th><th class="text-left px-5 py-3.5">Plans</th><th class="text-left px-5 py-3.5">Sent</th><th class="text-left px-5 py-3.5">Shepley</th><th class="text-right px-5 py-3.5">Estimate</th><th class="text-right px-5 py-3.5">Shepley quote</th>
+            </tr></thead>
+            <tbody>${QUOTE_REQUESTS.map(q => `
+              <tr data-qr="${q.id}" class="row border-t cursor-pointer" style="border-color: var(--rule);" onclick="openQuoteRequest('${q.id}')">
+                <td class="px-5 py-4"><div class="font-medium">${q.job}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${q.addr}</div></td>
+                <td class="px-5 py-4 text-[14px]"><div>${q.scope}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${q.sheets} sheets · ${q.architect}</div></td>
+                <td class="px-5 py-4 text-[14px]" style="color: var(--ink-muted);">${q.sent || '—'}</td>
+                <td class="px-5 py-4">${qrStatusBadge(q)}</td>
+                <td class="px-5 py-4 text-right mono text-[14px]">${q.aiTotal ? usd0(q.aiTotal) : '—'}</td>
+                <td class="px-5 py-4 text-right mono text-[14px]">${q.shepleyTotal ? usd0(q.shepleyTotal) : '<span style="color: var(--ink-muted);">pending</span>'}</td>
+              </tr>`).join('')}</tbody>
+          </table>
+          <div class="md:hidden">${QUOTE_REQUESTS.map((q, i) => `
+            <div data-qr="${q.id}" class="px-4 py-4 cursor-pointer active:bg-[var(--hover)] ${i ? 'border-t' : ''}" style="border-color: var(--rule);" onclick="openQuoteRequest('${q.id}')">
+              <div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-medium">${q.job}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${q.addr}</div></div>${qrStatusBadge(q)}</div>
+              <div class="text-[13px] mt-2 mono" style="color: var(--ink-muted);">Est. ${q.aiTotal ? usd0(q.aiTotal) : '—'}${q.shepleyTotal ? ' · Shepley ' + usd0(q.shepleyTotal) : ''}</div>
+            </div>`).join('')}</div>
+        </div>
+      </div>`;
+  }
+
+  function setQrTab(tab) { qrState.tab = tab; renderQrDetail(); }
+
+  function renderQrDetail() {
+    const q = QUOTE_REQUESTS.find(x => x.id === qrState.id);
+    if (!q) return;
+    const isS = q.id === 'saidnawey';
+    const tabs = [['package', 'Request package']];
+    if (q.status === 'received') tabs.push(['compare', 'Shepley vs. estimate']);
+    if (isS) tabs.push(['flags', `Flags · ${SAIDNAWEY_FLAGS.length}`]);
+    if (!tabs.find(t => t[0] === qrState.tab)) qrState.tab = 'package';
+
+    let content = '';
+    if (qrState.tab === 'package') content = renderQrPackage(q);
+    if (qrState.tab === 'compare') content = renderQrCompare();
+    if (qrState.tab === 'flags') content = renderQrFlags();
+
+    const timeline = q.status === 'received'
+      ? `Estimate ready <strong>Aug 18, 3m 48s</strong> after upload · Shepley's quote came back <strong>Sep 4</strong>, <strong>17 days</strong> later`
+      : q.status === 'waiting'
+        ? `Estimate ready ${q.sent} · Shepley on <strong>day ${q.days}</strong> (their average is 13) · <a class="underline decoration-dotted cursor-pointer" onclick="showToast('Follow-up drafted to Team Pina')">nudge Team Pina</a>`
+        : `Estimate ready · not sent to Shepley yet`;
+
+    $('qr-body').innerHTML = `
+      <div class="max-w-[1200px] mx-auto">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-2">
+          <div class="min-w-0">
+            <div class="text-[24px] font-semibold leading-tight">${q.job}</div>
+            <div class="text-[14px] mt-1" style="color: var(--ink-muted);">${q.addr} · ${q.scope}</div>
+          </div>
+          <div class="shrink-0">${qrStatusBadge(q)}</div>
+        </div>
+        <div class="text-[14px] mb-6 [&_strong]:text-[var(--ink)] [&_strong]:font-semibold" style="color: var(--ink-2);">${timeline}</div>
+        ${q.status === 'received' && SCOPES.find(j => j.id === q.id) ? `<button onclick="openScopeApp('${q.id}')" class="pressable w-full md:w-auto mb-6 rounded-[14px] px-5 py-3.5 text-left flex items-center gap-3" style="background: var(--green-soft); color: #173F29;"><span class="text-[15px]"><strong>Next step:</strong> scopes are ready for ${subTrades(SCOPES.find(j => j.id === q.id)).length} subs. Review and send</span><span>${ICON.chevron}</span></button>` : ''}
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-7">
+          ${statCard('Estimate', usd0(q.aiTotal), 'materials before tax')}
+          ${statCard('Shepley quote', q.shepleyTotal ? usd0(q.shepleyTotal) : 'Pending', q.shepleyTotal ? 'incl. ext doors + tax' : 'Team Pina · Hyannis')}
+          ${statCard(isS ? 'Difference' : 'Plan sheets', isS ? (((q.aiTotal - SAIDNAWEY_GROUPS.reduce((a, r) => a + r.shepley, 0)) / SAIDNAWEY_GROUPS.reduce((a, r) => a + r.shepley, 0)) * 100).toFixed(1).replace('-', '−') + '%' : q.sheets, isS ? 'estimate vs. frame quote' : q.planSet)}
+          ${statCard('Time saved', isS ? '17 days' : '~2 weeks', isS ? 'to a number you can use' : 'expected Shepley wait')}
+        </div>
+
+        <div class="flex items-center gap-1 p-1 rounded-[12px] mb-5 w-fit max-w-full overflow-x-auto scroll-hide" style="background: var(--sidebar);">
+          ${tabs.map(([k, l]) => `<button data-qrtab="${k}" onclick="setQrTab('${k}')" class="tab-pill ${qrState.tab === k ? 'is-active' : ''} px-4 py-1.5 rounded-[9px] text-[14px] whitespace-nowrap">${l}</button>`).join('')}
+        </div>
+        ${content}
+      </div>`;
+  }
+
+  function statCard(label, value, sub) {
+    return `<div class="rounded-[14px] border px-4 py-3.5" style="border-color: var(--rule); background: var(--surface);">
+      <div class="text-[12.5px]" style="color: var(--ink-muted);">${label}</div>
+      <div class="text-[22px] font-semibold mt-1 mono tracking-tight truncate">${value}</div>
+      <div class="text-[12px] mt-0.5 truncate" style="color: var(--ink-muted);">${sub}</div>
+    </div>`;
+  }
+
+  function renderQrPackage(q) {
+    const isS = q.id === 'saidnawey';
+    const groups = isS ? SAIDNAWEY_GROUPS : null;
+    const sentLine = q.sent ? `Sent ${q.sent}` : 'Not sent yet';
+    return `
+      <div class="grid grid-cols-1 lg:grid-cols-[7fr_5fr] gap-6">
+        <div>
+          <div class="section-label mb-3">Email to Shepley · ${sentLine}</div>
+          <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: #fff;">
+            <div class="px-5 py-3.5 border-b text-[13.5px] space-y-1" style="border-color: var(--rule); color: var(--ink-2);">
+              <div><span style="color: var(--ink-muted);">To:</span> Team Pina &lt;teampina@qxo.com&gt;</div>
+              <div><span style="color: var(--ink-muted);">Cc:</span> Evan Presswood · Adam Lucier</div>
+              <div><span style="color: var(--ink-muted);">Subject:</span> <strong style="color: var(--ink);">Takeoff request: ${q.job}, ${q.addr}</strong></div>
+            </div>
+            <div class="px-5 py-4 text-[14.5px] leading-[1.65] space-y-3" style="color: var(--ink);">
+              <p>Hi Evan and team,</p>
+              <p>Please quote materials for the ${q.job} (${q.scope.toLowerCase()}). The ${isS ? 'ArchiPlicity progress set dated 8/16' : 'plan set'} is attached, along with a scope sheet that lists every group, spec and sheet reference so you don't have to hunt for anything.</p>
+              ${isS ? `<p><strong>Already answered:</strong> engineered wood per the EWP list on sheets 7–10; white cedar shingles with bleaching oil at a 5" exposure; CertainTeed Landmark Pro (colors to follow); IPE decking for the porch, stoop, stairs and balcony; a $12k hardware allowance. Metal roof (55 sf) is by others.</p>
+              <p><strong>Please quote separately:</strong> Andersen 400 Series windows (schedule A–K, sheet 3) and exterior doors (schedule A–F, sheet 4).</p>` : `<p>Specs follow our standard package (AdvanTech subfloor, ZIP wall, Azek trim, white cedar). Anything unusual is noted on the scope sheet.</p>`}
+              <p>Thanks,<br/>Doug Mullen · Mullen Building &amp; Remodeling · Acct MULDOU 0372</p>
+            </div>
+            <div class="px-5 py-3.5 border-t space-y-2" style="border-color: var(--rule); background: var(--bg);">
+              ${attachRow(ICON.pdf, q.planSet, q.sheets + ' sheets')}
+              ${attachRow(ICON.pdf, q.job.split(' ')[0] + '_Scope_Sheet.pdf', isS ? '21 groups · 4 pages' : 'scope + specs')}
+              ${attachRow(ICON.sheet, q.job.split(' ')[0] + '_Takeoff.xlsx', 'quantities by group, for Shepley\'s estimator')}
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 mt-4">
+            ${q.sent ? `<button onclick="showToast('Follow-up drafted to Team Pina')" class="pressable btn-secondary text-[14px] font-medium px-4 py-2 rounded-full">Send a follow-up</button>` : `<button onclick="sendQr('${q.id}')" class="pressable btn-primary text-[14px] font-medium px-5 py-2 rounded-full">Send to Shepley</button>`}
+            <button onclick="showToast('Opened in Outlook as a draft')" class="pressable btn-secondary text-[14px] font-medium px-4 py-2 rounded-full">Edit in Outlook</button>
+          </div>
+        </div>
+        <div>
+          <div class="section-label mb-3">Scope sheet${isS ? ' · Shepley\'s 21 groups' : ''}</div>
+          <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
+            ${groups ? groups.map((r, i) => `
+              <div class="px-4 py-3 ${i ? 'border-t' : ''}" style="border-color: var(--rule);">
+                <div class="flex items-baseline justify-between gap-3"><div class="text-[14px] font-medium">${r.g}</div><div class="mono text-[12.5px] shrink-0" style="color: var(--ink-muted);">${r.sheets === '—' ? '' : 'Sh. ' + r.sheets}</div></div>
+                <div class="text-[13px] mt-0.5" style="color: var(--ink-2);">${r.spec}</div>
+              </div>`).join('') : genericScopeRows(q)}
+          </div>
+        </div>
+      </div>`;
+  }
+  function genericScopeRows(q) {
+    const rows = q.id === 'whitcomb'
+      ? [['Foundation', '16×24 frost wall, 4\' footings, PT sills', '1'], ['Floor system', '11-7/8" I-joists 16" o.c., 3/4" AdvanTech', '2'], ['Walls', '2×6 @ 16", 1/2" ZIP wall, 8\' plate', '2'], ['Roof', '2×10 rafters, shed dormer, 5/8" CDX', '3'], ['Roofing', 'Landmark Pro to match existing', '4'], ['Exterior trim', 'Azek to match existing profile', '4'], ['Siding', 'White cedar, 5" exposure', '4'], ['Windows', 'Quote separately: Andersen 400 (5 units)', '4']]
+      : q.id === 'coleman'
+        ? [['Mudroom foundation', '(4) 12" sonotubes, Big-Foot bases', '2'], ['Mudroom framing', '2×6 walls, 2×8 roof, 1/2" ZIP', '3'], ['Kitchen', 'Remove bearing wall: LVL flush beam (engineer letter attached)', '4'], ['Trim', 'Azek exterior; poplar interior casing', '6'], ['Roofing', 'Match existing Landmark (Weathered Wood)', '3']]
+        : [['Deck framing', 'PT 2×10 joists 12" o.c., hidden fasteners', '1'], ['Decking', 'Mahogany 1×4, 620 sf + 10% waste', '1'], ['Railing', '42" Azek rail, 86 lf, graspable stair rail', '2']];
+    return rows.map((r, i) => `
+      <div class="px-4 py-3 ${i ? 'border-t' : ''}" style="border-color: var(--rule);">
+        <div class="flex items-baseline justify-between gap-3"><div class="text-[14px] font-medium">${r[0]}</div><div class="mono text-[12.5px] shrink-0" style="color: var(--ink-muted);">Sh. ${r[2]}</div></div>
+        <div class="text-[13px] mt-0.5" style="color: var(--ink-2);">${r[1]}</div>
+      </div>`).join('');
+  }
+  function attachRow(icon, name, meta) {
+    return `<div class="flex items-center gap-2.5 text-[13.5px] min-w-0">${icon}<span class="truncate font-medium">${name}</span><span class="truncate hidden sm:inline" style="color: var(--ink-muted);">· ${meta}</span></div>`;
+  }
+  function sendQr(id) {
+    const q = QUOTE_REQUESTS.find(x => x.id === id); if (!q) return;
+    q.sent = 'Today'; q.status = 'waiting'; q.days = 0;
+    renderQrDetail();
+    showToast('Sent to Team Pina at Shepley');
+  }
+
+  function renderQrCompare() {
+    const shepSub = SAIDNAWEY_GROUPS.reduce((s, r) => s + r.shepley, 0);
+    const aiSub = SAIDNAWEY_GROUPS.reduce((s, r) => s + r.ai, 0);
+    const pct = (a, b) => ((a - b) / b) * 100;
+    const row = r => {
+      const d = pct(r.ai, r.shepley);
+      const big = Math.abs(d) >= 3;
+      const note = DELTA_NOTES[r.g];
+      return `
+        <tr class="border-t ${note ? 'cursor-pointer row' : ''}" style="border-color: var(--rule);" ${note ? `onclick="toggleDeltaNote(this)"` : ''}>
+          <td class="px-4 md:px-5 py-3"><div class="font-medium flex items-center gap-2">${r.g}${note ? `<span class="badge b-amber">why?</span>` : ''}</div>
+            ${note ? `<div class="delta-note hidden text-[13px] mt-2 leading-[1.5] max-w-[560px]" style="color: var(--ink-2);">${note}</div>` : ''}</td>
+          <td class="px-4 md:px-5 py-3 text-right mono text-[13.5px]">${usd(r.shepley)}</td>
+          <td class="px-4 md:px-5 py-3 text-right mono text-[13.5px] hidden sm:table-cell">${usd0(r.ai)}</td>
+          <td class="px-4 md:px-5 py-3 text-right mono text-[13px]" style="color: ${big ? 'var(--amber)' : 'var(--ink-muted)'}; font-weight: ${big ? 600 : 400};">${d > 0 ? '+' : ''}${d.toFixed(1)}%</td>
+        </tr>`;
+    };
+    return `
+      <p class="text-[16px] leading-[1.6] mb-5 max-w-[860px]" style="color: var(--ink-2);">
+        Shepley's frame quote <span class="mono text-[14px]">0002860097</span> came back at <strong style="color: var(--ink);">${usd(shepSub)}</strong> before tax. The estimate on Aug 18 was <strong style="color: var(--ink);">${usd0(aiSub)}</strong>, <strong style="color: var(--ink);">${Math.abs(pct(aiSub, shepSub)).toFixed(1)}%</strong> lower. ${SAIDNAWEY_GROUPS.filter(r => Math.abs(pct(r.ai, r.shepley)) < 3).length} of 21 groups were within 3%. Tap a flagged group to see why it's different.
+      </p>
+      <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
+        <table class="w-full text-[14.5px]">
+          <thead><tr class="border-b text-[13px] font-medium" style="border-color: var(--rule); color: var(--ink-muted);">
+            <th class="text-left px-4 md:px-5 py-3">Group</th><th class="text-right px-4 md:px-5 py-3">Shepley</th><th class="text-right px-4 md:px-5 py-3 hidden sm:table-cell">Estimate</th><th class="text-right px-4 md:px-5 py-3">Δ</th>
+          </tr></thead>
+          <tbody>${SAIDNAWEY_GROUPS.map(row).join('')}</tbody>
+          <tfoot>
+            <tr class="border-t" style="border-color: var(--rule); background: var(--bg);"><td class="px-4 md:px-5 py-3 font-semibold">Subtotal</td><td class="px-4 md:px-5 py-3 text-right mono text-[13.5px] font-semibold">${usd(shepSub)}</td><td class="px-4 md:px-5 py-3 text-right mono text-[13.5px] font-semibold hidden sm:table-cell">${usd0(aiSub)}</td><td class="px-4 md:px-5 py-3 text-right mono text-[13px] font-semibold">${pct(aiSub, shepSub).toFixed(1)}%</td></tr>
+            <tr class="border-t text-[13.5px]" style="border-color: var(--rule); color: var(--ink-muted);"><td class="px-4 md:px-5 py-2.5" colspan="4">+ Ext doors quote 2859245 · $14,902.81 · + MA sales tax 6.25% · Grand total on cover sheet <strong class="mono" style="color: var(--ink);">$227,663.55</strong></td></tr>
+          </tfoot>
+        </table>
+      </div>`;
+  }
+  function toggleDeltaNote(tr) { const n = tr.querySelector('.delta-note'); if (n) n.classList.toggle('hidden'); }
+
+  function renderQrFlags() {
+    const tone = { red: ['var(--red-soft)', 'var(--red)'], amber: ['var(--amber-soft)', 'var(--amber)'], muted: ['var(--hover)', 'var(--ink-muted)'] };
+    return `
+      <p class="text-[16px] leading-[1.6] mb-5 max-w-[860px]" style="color: var(--ink-2);">I checked Shepley's quote against the plans, line by line. These are the things to settle before you order:</p>
+      <div class="space-y-3 max-w-[900px]">${SAIDNAWEY_FLAGS.map((f, i) => `
+        <div class="rounded-[14px] border px-5 py-4 flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4" style="border-color: var(--rule); background: var(--surface);">
+          <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style="background: ${tone[f.level][0]}; color: ${tone[f.level][1]};">${ICON.flag}</span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[15.5px] font-semibold">${f.title}</div>
+            <div class="text-[14px] mt-1 leading-[1.6]" style="color: var(--ink-2);">${f.body}</div>
+          </div>
+          <button onclick="flagAction(${i})" class="pressable btn-secondary text-[13.5px] font-medium px-4 py-2 rounded-full shrink-0 self-start">${f.action}</button>
+        </div>`).join('')}</div>`;
+  }
+  function flagAction(i) {
+    const f = SAIDNAWEY_FLAGS[i];
+    if (f.action === 'Open roofing scope') return openScopeApp('saidnawey');
+    const msgs = {
+      'Draft window request': 'Window quote request drafted to Team Pina (schedule A–K attached)',
+      'Add handrail line': 'Added: 1-1/2" graspable handrail, 2 runs, to the rear stairs',
+      'Ask the client': 'Text drafted to the Saidnaweys with 3 Landmark Pro color swatches',
+      'Note for trim sub': 'Added a bracket note to the trim scope',
+      'Remind me Oct 1': 'Reminder set for Oct 1: lock in Shepley pricing',
+    };
+    showToast(msgs[f.action] || 'Done');
+  }
+
+  function newQuoteRequest() {
+    if (qrState.view !== 'list') { qrState.view = 'list'; }
+    if (QUOTE_REQUESTS.find(q => q.id === 'lindqvist')) { renderQr(); return showToast('Already building the Lindqvist request'); }
+    QUOTE_REQUESTS.push({ id: 'lindqvist', job: 'Lindqvist Sunroom', addr: '62 Putnam Ave, Cotuit', scope: '14×20 sunroom on piers', architect: 'Uploaded just now', planSet: 'Lindqvist_Sunroom_Plans.pdf', sheets: 4, sent: null, status: 'building', days: 0, aiTotal: null, shepleyTotal: null });
+    renderQr();
+    showToast('Reading Lindqvist_Sunroom_Plans.pdf…');
+    setTimeout(() => {
+      const q = QUOTE_REQUESTS.find(x => x.id === 'lindqvist');
+      q.status = 'draft'; q.aiTotal = 31780;
+      if (!$('qr-view').classList.contains('hidden') && qrState.view === 'list') renderQr();
+      showToast('Lindqvist request ready: estimate $31,780');
+    }, 3200);
+  }
+  function qrChatSubmit() {
+    const i = $('qr-chat-input'); const v = i.value.trim().toLowerCase(); i.value = '';
+    if (!v) return;
+    if (qrState.view === 'detail') {
+      const q = QUOTE_REQUESTS.find(x => x.id === qrState.id);
+      if (/sub|scope/.test(v) && SCOPES.find(j => j.id === q.id)) return openScopeApp(q.id);
+      if (/flag|miss|wrong|problem/.test(v) && q.id === 'saidnawey') return setQrTab('flags');
+      if (/compare|differ|estimate/.test(v) && q.status === 'received') return setQrTab('compare');
+      if (/follow|nudge|remind|email|pina/.test(v)) return showToast('Follow-up drafted to Team Pina');
+      if (/send/.test(v) && !q.sent) return sendQr(q.id);
+      return showToast(`Noted on ${q.job}. In the full build I'd answer from the quote and plans`);
+    }
+    if (/saidnawey|hedge/.test(v)) return openQuoteRequest('saidnawey', 'compare');
+    if (/whitcomb/.test(v)) return openQuoteRequest('whitcomb');
+    if (/plan|upload|new|sunroom|lindqvist/.test(v)) return newQuoteRequest();
+    showToast('In the full build, this answers from your Shepley history');
+  }
+
+  // =====================================================================
+  // App: Scope agent
+  // =====================================================================
+  // Scope Agent: a list of jobs (same format as Shepley Quote Requests).
+  // When Shepley sends a quote back, the job's scopes are split out and ready to review and send.
+  let scopeView = 'list', scopeJobId = 'whitcomb', scopeBuilding = false;
+  const scopeSent = {};    // jobId → { tradeIndex: { state: 'sent' | 'viewed' | 'bid', bid } }
+  const scopeChecked = {}; // jobId → Set of trade indexes to send to
+  const scopeJob = () => SCOPES.find(x => x.id === scopeJobId);
+  const subTrades = job => job.trades.map((t, i) => [t, i]).filter(([t]) => t.status !== 'inhouse');
+  function sentFor(job) {
+    if (!scopeSent[job.id]) {
+      const seeded = {};
+      job.trades.forEach((t, i) => {
+        if (t.status === 'bid') seeded[i] = { state: 'bid', bid: t.bid };
+        else if (t.status === 'viewed' || t.status === 'question') seeded[i] = { state: 'viewed' };
+        else if (t.status === 'sent') seeded[i] = { state: 'sent' };
+      });
+      scopeSent[job.id] = seeded;
+    }
+    return scopeSent[job.id];
+  }
+  function openScopeApp(id) {
+    showApp('scope-view');
+    if (id && SCOPES.find(x => x.id === id)) { scopeView = 'detail'; scopeJobId = id; } else scopeView = 'list';
+    renderScope();
+  }
+  function scopeBack() { if (scopeView === 'detail' && !scopeBuilding) { scopeView = 'list'; renderScope(); } else closeApps(); }
+  function focusScopeChat() { scopeView = 'list'; renderScope(); setTimeout(() => $('scope-chat-input').focus(), 50); }
+
+  function scopeShepleyBadge(j) {
+    if (j.shepley === 'back') return `<span class="badge b-green">${j.shepleyLabel}</span>`;
+    if (j.shepley === 'waiting') return `<span class="badge b-amber">${j.shepleyLabel}</span>`;
+    return `<span class="badge b-muted">${j.shepleyLabel || 'Not needed'}</span>`;
+  }
+  function scopeStatus(j) {
+    const sent = sentFor(j), n = subTrades(j).length, out = Object.keys(sent).length;
+    const bids = Object.values(sent).filter(v => v.state === 'bid');
+    if (!out) return { badge: `<span class="badge b-accent">Ready to review</span>`, bids: '—' };
+    return { badge: `<span class="badge b-muted">Out to subs · ${j.sentOn || 'today'}</span>`, bids: bids.length ? `${bids.length} of ${out} · ${usd0(bids.reduce((a, v) => a + v.bid, 0))}` : `0 of ${out}` };
+  }
+
+  function renderScope() {
+    if (scopeBuilding) return;
+    $('scope-back-label').textContent = scopeView === 'detail' ? 'All jobs' : 'Back';
+    $('scope-floating-chat').classList.remove('hidden');
+    $('scope-example').classList.toggle('hidden', scopeView !== 'list');
+    $('scope-body').style.paddingBottom = scopeView === 'list' ? '' : '140px';
+    $('scope-chat-input').placeholder = scopeView === 'detail' ? 'Change who gets a scope, add a note for the subs, or ask about a bid…' : 'Describe a new job, or ask about a bid…';
+    if (scopeView === 'detail') return renderScopeJob();
+    const ready = SCOPES.filter(j => !Object.keys(sentFor(j)).length);
+    const out = SCOPES.filter(j => Object.keys(sentFor(j)).length);
+    const said = SCOPES.find(j => j.id === 'saidnawey');
+    $('scope-body').innerHTML = `
+      <div class="max-w-[1200px] mx-auto">
+        <div class="mb-5">
+          <div class="text-[24px] font-semibold leading-tight">Scope Agent</div>
+          <div class="text-[14px] mt-1 leading-[1.55] max-w-[780px]" style="color: var(--ink-2);"><span style="color: var(--ink); font-weight: 600;">What it does:</span> When Shepley sends a quote back, it splits out the work each sub needs to price, fills in their scope from the plans and the quote, and gets it ready for you to send. Subs just add a price.</div>
+        </div>
+        <p class="mb-8 max-w-[880px] text-[18px] md:text-[19px] leading-[1.65]" style="color: var(--ink-2);">
+          ${said && !Object.keys(sentFor(said)).length ? `Shepley sent back the <span class="num filter-link" onclick="openScopeApp('saidnawey')">Saidnawey</span> quote, so I split out the work for <span class="num">${subTrades(said).length} subs</span>. It's ready for you to review and send.` : `All scopes are out.`}
+          <span class="block mt-3">${out.map(j => { const st = scopeStatus(j); return `<strong style="color: var(--ink);">${j.job.split(' ')[0]}</strong>: ${st.bids.split(' · ')[0]} bids in`; }).join(' · ')}.</span>
+        </p>
+        <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
+          <table class="w-full text-[15px] hidden md:table">
+            <thead><tr class="border-b text-[13px] font-medium" style="border-color: var(--rule); color: var(--ink-muted);">
+              <th class="text-left px-5 py-3.5">Job</th><th class="text-left px-5 py-3.5">Scope</th><th class="text-left px-5 py-3.5">Shepley</th><th class="text-left px-5 py-3.5">Subs</th><th class="text-left px-5 py-3.5">Status</th><th class="text-right px-5 py-3.5">Bids in</th>
+            </tr></thead>
+            <tbody>${[...ready, ...out].map(j => { const st = scopeStatus(j); return `
+              <tr data-scope="${j.id}" class="row border-t cursor-pointer" style="border-color: var(--rule);" onclick="openScopeApp('${j.id}')">
+                <td class="px-5 py-4"><div class="font-medium">${j.job}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${j.addr}</div></td>
+                <td class="px-5 py-4 text-[14px] max-w-[340px]"><div class="line-clamp-2">${j.summary}</div></td>
+                <td class="px-5 py-4">${scopeShepleyBadge(j)}</td>
+                <td class="px-5 py-4 text-[14px]">${subTrades(j).length}</td>
+                <td class="px-5 py-4">${st.badge}</td>
+                <td class="px-5 py-4 text-right mono text-[13.5px]">${st.bids}</td>
+              </tr>`; }).join('')}</tbody>
+          </table>
+          <div class="md:hidden">${[...ready, ...out].map((j, i) => { const st = scopeStatus(j); return `
+            <div data-scope="${j.id}" class="px-4 py-4 cursor-pointer ${i ? 'border-t' : ''}" style="border-color: var(--rule);" onclick="openScopeApp('${j.id}')">
+              <div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-medium">${j.job}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${j.addr}</div></div>${st.badge}</div>
+              <div class="text-[13px] mt-2 mono" style="color: var(--ink-muted);">Shepley: ${j.shepleyLabel} · ${subTrades(j).length} subs · bids ${st.bids}</div>
+            </div>`; }).join('')}</div>
+        </div>
+      </div>`;
+  }
+
+  function renderScopeJob() {
+    const job = scopeJob();
+    const sent = sentFor(job);
+    if (!scopeChecked[job.id]) scopeChecked[job.id] = new Set(subTrades(job).map(([, i]) => i));
+    const checked = scopeChecked[job.id];
+    const inHouse = job.trades.filter(t => t.status === 'inhouse').map(t => t.t.toLowerCase());
+    const isSent = Object.keys(sent).length > 0;
+    const bids = Object.values(sent).filter(v => v.state === 'bid');
+    const status = i => {
+      const st = sent[i];
+      if (!st) return '';
+      if (st.state === 'bid') return `<span class="badge b-green">Bid in · ${usd0(st.bid)}</span>`;
+      if (st.state === 'viewed') return `<span class="badge b-accent">Opened</span>`;
+      return `<span class="badge b-muted">Sent ✓</span>`;
+    };
+    $('scope-body').innerHTML = `
+      <div class="max-w-[820px] mx-auto">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-6">
+          <div class="min-w-0">
+            <div class="text-[24px] font-semibold leading-tight">${job.job}</div>
+            <div class="text-[14px] mt-1" style="color: var(--ink-muted);">${job.client} · ${job.addr}</div>
+          </div>
+          <div class="shrink-0 flex items-center gap-2">${job.shepleyLabel ? `<span class="text-[12.5px]" style="color: var(--ink-muted);">Shepley</span>${scopeShepleyBadge(job)}` : ''}</div>
+        </div>
+
+        <div class="section-label mb-2">1 · The job</div>
+        <div class="rounded-[16px] border p-5 md:p-6" style="border-color: var(--rule); background: var(--surface);">
+          <p class="text-[16px] leading-[1.6]">${job.summary}</p>
+          <div class="flex flex-wrap gap-2 mt-4">${job.source.split(' + ').map(x => `<span class="text-[12.5px] px-3 py-1 rounded-full" style="background: var(--hover); color: var(--ink-2);">${x}</span>`).join('')}</div>
+          ${job.fromShepley ? `
+          <div class="mt-5 rounded-[12px] p-4" style="background: var(--green-soft);">
+            <div class="text-[14px] font-semibold" style="color: #173F29;">From Shepley's quote</div>
+            <div class="mt-2 space-y-1.5">${job.fromShepley.map(([k, v]) => `<div class="flex gap-2 text-[14px] leading-[1.5]" style="color: #1E4A33;"><span class="mt-[3px] shrink-0">${ICON.check}</span><div><strong style="font-weight: 600;">${k}:</strong> ${v}</div></div>`).join('')}</div>
+          </div>` : ''}
+        </div>
+
+        <div class="section-label mt-8 mb-2">2 · Who gets a scope</div>
+        <div class="rounded-[16px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
+          ${subTrades(job).map(([t, i], k) => `
+            <div class="flex items-center gap-3 md:gap-4 px-4 md:px-5 py-3.5 ${k ? 'border-t' : ''}" style="border-color: var(--rule);">
+              <input type="checkbox" ${checked.has(i) || sent[i] ? 'checked' : ''} ${isSent ? 'disabled' : ''} onchange="toggleScopeTrade(${i}, this.checked)" class="w-5 h-5 shrink-0" style="accent-color: var(--accent);" />
+              <div class="min-w-0 flex-1">
+                <div class="text-[15px] font-medium">${t.t}</div>
+                <div class="text-[13px] mt-0.5" style="color: var(--ink-muted);">${t.sub} · ${t.prefilled} of ${t.total} filled in for them</div>
+              </div>
+              <div class="shrink-0 flex items-center gap-2">
+                ${status(i)}
+                <button data-preview="${i}" onclick="previewSubView('${job.id}', ${i})" class="pressable btn-ghost text-[13px] font-medium px-3 py-1.5 rounded-full" style="color: var(--accent);">Preview</button>
+              </div>
+            </div>`).join('')}
+        </div>
+        ${inHouse.length ? `<div class="text-[13px] mt-2 px-1" style="color: var(--ink-muted);">Your crew handles ${inHouse.join(', ')}, so no scope goes out for that.</div>` : ''}
+
+        <div class="mt-6">
+          ${isSent
+            ? `<div class="rounded-[14px] px-5 py-4 text-[15px] leading-[1.55]" style="background: var(--green-soft); color: #173F29;"><strong>Sent to ${Object.keys(sent).length} subs</strong> by text and email · ${job.due.toLowerCase().startsWith('bids') ? job.due.toLowerCase() : 'bids due in 7 days'}.${bids.length ? ` <strong>${bids.length} bid${bids.length > 1 ? 's' : ''} in so far, ${usd0(bids.reduce((a, v) => a + v.bid, 0))}.</strong>` : ''} Bids show up here as they come in.</div>`
+            : `<button id="scope-send" onclick="sendScopesNow()" class="pressable btn-primary w-full md:w-auto text-[16px] font-medium px-7 py-3.5 rounded-full flex items-center justify-center gap-2" ${checked.size ? '' : 'disabled style="opacity: .5"'}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                Send to ${checked.size} sub${checked.size === 1 ? '' : 's'}</button>`}
+        </div>
+      </div>`;
+  }
+  function toggleScopeTrade(i, on) { const c = scopeChecked[scopeJobId]; on ? c.add(i) : c.delete(i); renderScope(); }
+
+  // Send: each sub flips to Sent, then a couple open it and one bid comes in, to show the idea
+  function sendScopesNow() {
+    const job = scopeJob();
+    if (Object.keys(sentFor(job)).length) return;
+    if (!scopeChecked[job.id]) scopeChecked[job.id] = new Set(subTrades(job).map(([, i]) => i));
+    const picks = [...scopeChecked[job.id]].sort((a, b) => a - b);
+    if (!picks.length) return;
+    job.sentOn = 'today';
+    const live = () => scopeJobId === job.id && !$('scope-view').classList.contains('hidden');
+    picks.forEach((i, k) => setTimeout(() => { scopeSent[job.id][i] = { state: 'sent' }; if (live()) renderScope(); }, 120 * k));
+    const after = (ms, fn) => setTimeout(() => { fn(); if (live()) renderScope(); }, ms);
+    const roof = picks.find(i => /roof/i.test(job.trades[i].t)), elec = picks.find(i => /electric/i.test(job.trades[i].t));
+    if (roof != null) { after(1800, () => { scopeSent[job.id][roof] = { state: 'viewed' }; }); after(3600, () => { scopeSent[job.id][roof] = { state: 'bid', bid: 21400 }; }); }
+    if (elec != null) after(2600, () => { scopeSent[job.id][elec] = { state: 'viewed' }; });
+    showToast(`Scopes sent to ${picks.length} subs by text + email`);
+  }
+
+  function genericTradeFields(s, t) {
+    return [
+      ['Project', `${s.job}, ${s.addr}`],
+      ['Scope', s.summary],
+      ['Your trade', `${t.t}: quantities and locations from the plan set and site photos`],
+      ['Specs', 'Mullen standard specs apply (attached). Anything different is called out on the sheets.'],
+      ['Schedule', 'Target window set from the job schedule; confirm below'],
+      ['Site', 'Occupied home: protect floors, keep the driveway clear, no radios'],
+      ['Insurance', 'COI on file ✓ · expires Mar 2027'],
+    ];
+  }
+
+  function previewSubView(scopeId, i) {
+    const s = SCOPES.find(x => x.id === scopeId); const t = s.trades[i];
+    const isElec = /electric/i.test(t.t);
+    const filled = isElec ? ELECTRICAL_SCOPE.filled : genericTradeFields(s, t);
+    const open = isElec ? ELECTRICAL_SCOPE.open : ['Anything in the plans that doesn\'t work for your trade?', 'Your price, and how long it\'s good for', 'Earliest start date'];
+    $('modal-card').style.maxWidth = '440px';
+    $('modal-card').innerHTML = `
+      <div class="px-5 pt-5 pb-4 border-b flex items-start justify-between gap-3" style="border-color: var(--rule);">
+        <div><div class="text-[12.5px]" style="color: var(--ink-muted);">What ${t.sub} sees on their phone</div><div class="text-[18px] font-semibold mt-1">${t.t} scope</div><div class="text-[13px] mt-0.5" style="color: var(--ink-muted);">Mullen Building · ${s.job}</div></div>
+        <button onclick="closeModal()" class="pressable p-2 rounded-full -m-1" style="color: var(--ink-muted);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="flex-1 overflow-y-auto scroll-hide px-5 py-4 space-y-4">
+        <div class="rounded-[12px] px-3.5 py-3 text-[13.5px]" style="background: var(--accent-soft); color: var(--accent-deep);">Hi, Doug's office here. We've filled in everything we know from the plans and photos. Check it, answer ${open.length} questions, and add your price. Takes about 5 minutes.</div>
+        <div class="space-y-1.5">${filled.slice(0, 6).map(([k, v]) => `<div class="flex gap-2.5 text-[13.5px] leading-[1.45]"><span class="mt-0.5 shrink-0" style="color: var(--green);">${ICON.check}</span><div><span class="font-medium">${k}:</span> <span style="color: var(--ink-2);">${v}</span></div></div>`).join('')}
+          <div class="text-[12.5px] pl-6" style="color: var(--ink-muted);">+ ${Math.max(0, filled.length - 6)} more · tap to edit anything that's wrong</div></div>
+        ${open.map((q, k) => `<div><div class="text-[13.5px] font-medium mb-1.5">${k + 1}. ${q}</div>${/price/i.test(q) ? `<div class="flex items-center gap-2 rounded-[10px] border px-3 py-2.5" style="border-color: var(--rule); background: #fff;"><span style="color: var(--ink-muted);">$</span><input class="flex-1 bg-transparent outline-none text-[14px] mono" placeholder="0.00" /></div>` : `<textarea rows="2" class="w-full rounded-[10px] border px-3 py-2 text-[14px] outline-none resize-none" style="border-color: var(--rule); background: #fff;" placeholder="Type or tap the mic…"></textarea>`}</div>`).join('')}
+      </div>
+      <div class="px-5 py-4 border-t" style="border-color: var(--rule); background: var(--bg);">
+        <button onclick="closeModal(); showToast('Bid submitted (preview)')" class="pressable btn-primary w-full text-[15px] font-medium px-4 py-3 rounded-full">Submit bid to Mullen</button>
+      </div>`;
+    $('modal').classList.remove('hidden');
+  }
+
+  function runScopeExample() {
+    if (SCOPES.find(x => x.id === 'lindqvist')) return openScopeApp('lindqvist');
+    scopeBuilding = true;
+    $('scope-floating-chat').classList.add('hidden');
+    $('scope-back-label').textContent = 'All jobs';
+    $('scope-body').innerHTML = `
+      <div class="max-w-[820px] mx-auto">
+        <div class="mb-6 flex justify-end"><div class="max-w-[88%] rounded-[22px] px-5 py-4 text-[16px] leading-[1.55]" style="background: var(--user-bubble);">The Lindqvists in Cotuit want a 14×20 sunroom off the kitchen on piers, cathedral ceiling, 3 skylights, radiant floor, done by Memorial Day.</div></div>
+        <div class="rounded-[16px] overflow-hidden border" style="border-color: var(--rule);">
+          <div class="flex items-center justify-between px-4 py-3 border-b" style="border-color: var(--rule); background: var(--surface);">
+            <div class="flex items-center gap-2.5"><span class="text-[14px] font-medium">Writing scopes</span><span class="text-[14px]" style="color: var(--ink-muted);">running</span></div>
+            <span id="scope-term-dot" class="w-2 h-2 rounded-full pulse-dot" style="background: var(--green);"></span>
+          </div>
+          <div style="background: var(--term-bg);"><div id="scope-stream" class="mono text-[12.5px] md:text-[13.5px] leading-[1.8] px-4 md:px-5 py-4 min-h-[240px] overflow-x-auto scroll-hide" style="color: var(--term-ink);"></div></div>
+        </div>
+      </div>`;
+    streamLines($('scope-stream'), SCOPE_STREAM).then(() => {
+      SCOPES.unshift({
+        id: 'lindqvist', job: 'Lindqvist Sunroom', client: 'Erik & Anna Lindqvist', addr: '62 Putnam Ave, Cotuit',
+        summary: '14×20 sunroom off the kitchen on piers. Cathedral ceiling, 3 skylights, ties into the existing hip roof, electric radiant floor. Done by Memorial Day.',
+        source: 'Your description + 4 past sunroom jobs', due: 'Ready for you to review', created: 'Today', shepleyLabel: 'Not requested yet',
+        trades: [
+          { t: 'Foundation (helical piers)', sub: 'Barnstable Site Works', prefilled: 12, total: 14, status: 'draft' },
+          { t: 'Framing', sub: 'Mullen crew (in-house)', prefilled: 16, total: 16, status: 'inhouse' },
+          { t: 'Roofing', sub: 'Tidewater Roofing', prefilled: 13, total: 16, status: 'draft' },
+          { t: 'Windows & skylights', sub: 'Shepley (Team Pina)', prefilled: 14, total: 16, status: 'draft' },
+          { t: 'Electrical', sub: 'Crocker Electric', prefilled: 15, total: 18, status: 'draft' },
+          { t: 'Radiant floor', sub: 'Nauset Plumbing & Heating', prefilled: 11, total: 14, status: 'draft' },
+          { t: 'Insulation', sub: 'Bayside Insulation', prefilled: 10, total: 12, status: 'draft' },
+          { t: 'Drywall', sub: 'Mashpee Drywall', prefilled: 13, total: 15, status: 'draft' },
+        ],
+      });
+      const dot = $('scope-term-dot'); if (dot) dot.classList.remove('pulse-dot');
+      setTimeout(() => { scopeBuilding = false; scopeView = 'detail'; scopeJobId = 'lindqvist'; renderScope(); showToast('7 scopes ready for the Lindqvist sunroom'); }, 600);
+    });
+  }
+  function scopeChatSubmit() {
+    const el = $('scope-chat-input'); const v = el.value.trim(); el.value = '';
+    if (!v) return;
+    if (scopeView === 'detail') {
+      const job = scopeJob(), t = v.toLowerCase(), sent = Object.keys(sentFor(job)).length;
+      const trade = subTrades(job).find(([tr]) => t.includes(tr.t.toLowerCase().split(/[ (&]/)[0]) || t.includes(tr.sub.toLowerCase().split(' ')[0]));
+      if (!sent && trade && /(skip|remove|don'?t|leave out|without|uncheck)/.test(t)) { toggleScopeTrade(trade[1], false); return showToast(`Took ${trade[0].sub} off this one`); }
+      if (!sent && trade && /(add|include|back)/.test(t)) { toggleScopeTrade(trade[1], true); return showToast(`Added ${trade[0].sub} back`); }
+      if (!sent && /\bsend\b/.test(t)) return sendScopesNow();
+      if (trade && /(bid|price|quote)/.test(t)) { const st = sentFor(job)[trade[1]]; return showToast(st && st.bid ? `${trade[0].sub} bid ${usd0(st.bid)}` : `No bid from ${trade[0].sub} yet. Want me to nudge them?`); }
+      if (sent && /(nudge|remind|follow)/.test(t)) return showToast(`Reminder sent to the subs who haven't bid`);
+      return showToast(sent ? 'Added to the job notes. Subs see it on their scope' : 'Added as a note on every scope before it goes out');
+    }
+    const hit = SCOPES.find(j => v.toLowerCase().includes(j.job.split(' ')[0].toLowerCase()));
+    if (hit) return openScopeApp(hit.id);
+    runScopeExample();
+  }
+
+  // =====================================================================
+  // App: Website form watcher
+  // =====================================================================
+  let formsTab = 'all';
+  const FORM_TABS = [
+    ['all', 'All', f => f.kind !== 'spam'],
+    ['lead', 'Project leads', f => f.kind === 'lead'],
+    ['client', 'Current clients', f => f.kind === 'client'],
+    ['trade', 'Trades & vendors', f => f.kind === 'trade'],
+    ['spam', 'Spam', f => f.kind === 'spam'],
+  ];
+  function openFormsApp() { showApp('forms-view'); setFormsTab('all'); }
+  function fitBadge(f) {
+    if (f.fit === 'high')   return `<span class="badge b-green">Strong fit</span>`;
+    if (f.fit === 'medium') return `<span class="badge b-accent">Good fit</span>`;
+    if (f.fit === 'low')    return `<span class="badge b-amber">Check first</span>`;
+    if (f.fit === 'client') return `<span class="badge b-accent">Client</span>`;
+    if (f.fit === 'trade')  return `<span class="badge b-muted">Trade / vendor</span>`;
+    return `<span class="badge b-muted">Spam</span>`;
+  }
+  function setFormsTab(tab) {
+    formsTab = tab;
+    const leads = FORMS.filter(f => f.kind === 'lead');
+    const strong = leads.filter(f => f.fit === 'high').length;
+    $('forms-summary').innerHTML = `Since Sunday, <span class="num filter-link" onclick="setFormsTab('all')">${FORMS.length} forms</span> came in from the website. I looked up every person and property: <span class="num filter-link" onclick="setFormsTab('lead')">${leads.length} project leads</span> (${strong} strong, worth an estimated <strong style="color: var(--ink);">$3.9M–5.3M</strong>), <span class="num filter-link" onclick="setFormsTab('client')">2 current clients</span>, <span class="num filter-link" onclick="setFormsTab('trade')">2 trades &amp; vendors</span>, and <span class="num filter-link" onclick="setFormsTab('spam')">2 spam</span>.<span class="block mt-3">Replies are drafted for all of them. Next check is in <strong style="color: var(--ink);">15 minutes</strong>.</span>`;
+    $('forms-tabs').innerHTML = FORM_TABS.map(([k, l, fn]) => `<button data-ftab="${k}" onclick="setFormsTab('${k}')" class="tab-pill ${k === tab ? 'is-active' : ''} px-4 py-1.5 rounded-[9px] text-[14px] whitespace-nowrap">${l} · ${FORMS.filter(fn).length}</button>`).join('');
+    const rows = FORMS.filter(FORM_TABS.find(t => t[0] === tab)[2]);
+    $('forms-table').innerHTML = `
+      <table class="w-full text-[15px] hidden md:table">
+        <thead><tr class="border-b text-[13px] font-medium" style="border-color: var(--rule); color: var(--ink-muted);"><th class="text-left px-5 py-3.5">From</th><th class="text-left px-5 py-3.5">Property</th><th class="text-left px-5 py-3.5">What they want</th><th class="text-left px-5 py-3.5">Looked up</th><th class="text-left px-5 py-3.5">Fit</th></tr></thead>
+        <tbody>${rows.map(f => `
+          <tr data-form="${f.id}" class="row border-t cursor-pointer" style="border-color: var(--rule);" onclick="openForm('${f.id}')">
+            <td class="px-5 py-4"><div class="font-medium">${f.name}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${f.received}</div></td>
+            <td class="px-5 py-4 text-[14px]">${f.addr}</td>
+            <td class="px-5 py-4 text-[14px]"><div>${f.project}</div><div class="text-[13px] mt-1 truncate max-w-[280px]" style="color: var(--ink-muted);">"${f.message}"</div></td>
+            <td class="px-5 py-4 text-[13.5px]">${f.prop && f.prop.assessed !== '—' ? `<div class="mono">${f.prop.assessed}</div><div class="text-[12.5px] mt-1" style="color: ${f.prop.match ? 'var(--ink-muted)' : 'var(--amber)'};">${f.prop.match ? 'Owner matches ✓' : 'Not the owner'} · ${f.prop.built === 'Vacant' ? 'vacant lot' : 'built ' + f.prop.built}</div>` : '<span style="color: var(--ink-muted);">—</span>'}</td>
+            <td class="px-5 py-4">${fitBadge(f)}</td>
+          </tr>`).join('')}</tbody>
+      </table>
+      <div class="md:hidden">${rows.map((f, i) => `
+        <div class="px-4 py-4 cursor-pointer ${i ? 'border-t' : ''}" style="border-color: var(--rule);" onclick="openForm('${f.id}')">
+          <div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-medium">${f.name}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${f.addr}</div></div>${fitBadge(f)}</div>
+          <div class="text-[13px] mt-2" style="color: var(--ink-2);">${f.project}${f.prop && f.prop.assessed !== '—' ? ' · <span class="mono">' + f.prop.assessed + '</span>' : ''}</div>
+        </div>`).join('')}</div>`;
+  }
+  function openForm(id) {
+    const f = FORMS.find(x => x.id === id); if (!f) return;
+    $('drawer-kicker').textContent = `Website form · ${f.received}`;
+    $('drawer-name').textContent = f.name;
+    $('drawer-sub').textContent = f.addr;
+    const p = f.prop;
+    const matchBox = p ? `<div class="rounded-[12px] p-4 text-[14px] leading-[1.55]" style="background: ${p.match ? 'var(--green-soft)' : 'var(--amber-soft)'}; color: ${p.match ? '#173F29' : '#6E4212'};">${p.notes}</div>` : '';
+    const reply = replyFor(f);
+    $('drawer-body').innerHTML = `
+      <div>
+        <div class="section-label mb-2">What they wrote</div>
+        <div class="rounded-[12px] px-4 py-3 text-[14.5px] leading-[1.55]" style="background: var(--user-bubble);">"${f.message}"</div>
+      </div>
+      ${p ? `<div>
+        <div class="section-label mb-2">Property lookup · town assessor + registry</div>
+        <div class="text-[14px]">
+          <div class="kv"><span>Owner of record</span><span>${p.owner} ${p.match ? '<span style="color: var(--green);">✓</span>' : '<span style="color: var(--amber);">✗</span>'}</span></div>
+          ${p.assessed !== '—' ? `<div class="kv"><span>Assessed value</span><span class="mono">${p.assessed}</span></div>
+          <div class="kv"><span>Built · size</span><span class="mono">${p.built}${p.sf !== '—' ? ' · ' + p.sf + ' sf' : ''}</span></div>
+          <div class="kv"><span>Lot · zoning</span><span class="mono">${p.lot} · ${p.zoning}</span></div>
+          <div class="kv"><span>Last sale</span><span class="mono">${p.lastSale}</span></div>` : ''}
+        </div>
+        <div class="mt-3">${matchBox}</div>
+      </div>` : ''}
+      <div>
+        <div class="section-label mb-2">Estimated project · next step</div>
+        <div class="text-[14px] leading-[1.55]"><div class="kv"><span>Estimate</span><span class="mono">${f.est}</span></div><div class="pt-2" style="color: var(--ink-2);">${f.next}</div></div>
+      </div>
+      ${reply ? `<div><div class="section-label mb-2">Drafted reply</div><div class="rounded-[12px] border px-4 py-3 text-[14px] leading-[1.6] whitespace-pre-line" style="border-color: var(--rule); background: #fff;">${reply}</div></div>` : ''}`;
+    const primary = f.kind === 'spam' ? 'Not spam' : f.kind === 'lead' ? 'Send reply + add to pipeline' : f.kind === 'client' ? 'Send to Doug' : 'Send onboarding link';
+    $('drawer-foot').innerHTML = `
+      <button onclick="closeDrawer(); showToast('Archived')" class="pressable btn-secondary flex-1 text-[14.5px] font-medium px-4 py-2.5 rounded-full">Archive</button>
+      <button onclick="closeDrawer(); showToast('${primary === 'Not spam' ? 'Moved to All' : 'Done: ' + primary.toLowerCase()}')" class="pressable btn-primary flex-[1.4] text-[14.5px] font-medium px-4 py-2.5 rounded-full">${primary}</button>`;
+    $('drawer').classList.remove('closed');
+  }
+  function replyFor(f) {
+    const first = f.name.split(/[ ,&]/)[0];
+    if (f.kind === 'spam') return '';
+    if (f.id === 'F1') return `Hi ${first},\n\nThanks for reaching out, and congratulations on the house. We've done several renovations inside the Wianno historic district and know the review process well.\n\nDoug would love to walk the house with you. Would Tuesday at 10 or Thursday at 2 work?\n\nMullen Building & Remodeling`;
+    if (f.id === 'F2') return `Hi Mark and Priya,\n\nCongratulations on the Seapuit lot. It's a beautiful stretch. We'd be glad to meet with you and your architect early, since preconstruction input on the flood zone and Conservation filing tends to save real time and money.\n\nWho's your architect? Happy to reach out directly.\n\nDoug`;
+    if (f.id === 'F5') return `Hi ${first},\n\nThanks for thinking of us. Since the property is owned by Craigville Holdings, we'd need the owner to request the work. If you can pass our info along, we'd be happy to take a look.\n\nMullen Building & Remodeling`;
+    if (f.kind === 'client') return `Hi ${first},\n\nGot it. ${f.next}\n\nDoug`;
+    if (f.kind === 'trade') return `Hi ${first},\n\nThanks for reaching out. Here's our sub onboarding link (COI, W-9, trade and towns). Once that's in, you'll start getting scopes for jobs near you.\n\nMullen Building & Remodeling`;
+    return `Hi ${first},\n\nThanks for reaching out about your project. Doug would love to see the house. Would one day next week work for a quick site visit?\n\nMullen Building & Remodeling`;
+  }
+  function sendAllLeads() {
+    const n = FORMS.filter(f => f.kind === 'lead' && f.fit !== 'low').length;
+    showToast(`Sent ${n} replies · added ${n} leads to the pipeline`);
+  }
+  function rerunForms() { showToast('Checked mullenbuilding.com/contact: nothing new since 11:02 AM'); }
+  function formsChatSubmit() {
+    const i = $('forms-chat-input'); const v = i.value.trim(); i.value = '';
+    if (!v) return;
+    if (/osterville/i.test(v)) { setFormsTab('lead'); return showToast('Showing leads. 2 of them are in Osterville'); }
+    showToast('Got it. I\'ll use that from the next check on');
+  }
+
+  // =====================================================================
+  // App: Website chat — leads inbox + settings Mullen can edit.
+  // The homepage (website/) reads these settings and saves every
+  // finished chat to the same browser storage, so the two pages connect.
+  // =====================================================================
+  const CHAT_SETTINGS_KEY = 'mullen.chat.settings';
+  const CHAT_LEADS_KEY = 'mullen.chat.leads';
+  const CHAT_DEFAULTS = {
+    greeting: 'Hi, thanks for stopping by Mullen Building & Remodeling. 👋',
+    askWho: 'So I can point you the right way, which of these fits you?',
+    hours: "Doug's team on call 7–5",
+    askSize: true, askTimeline: true, showBallpark: true, askPlans: true, offerVisit: true,
+    kitchenLo: 120, kitchenHi: 250, addLo: 380, addHi: 560, newLo: 650, newHi: 950,
+    visitTimes: 'Tue 10:00 AM, Wed 2:00 PM, Fri 9:30 AM',
+    rules: "Never promise a start date or a firm price.\nDon't discuss other clients by name.\nIf someone is upset, hand the chat to Doug right away.",
+    faqs: [
+      { q: 'Do you work in New Hampshire?', a: 'Yes. Along with Cape Cod, we build in the Mount Washington Valley, including the Black Diamond Residences at Cranmore Mountain.' },
+      { q: 'Are you licensed and insured?', a: 'Yes. Mullen is fully licensed and insured in Massachusetts, and we can send certificates on request.' },
+      { q: 'Do you take on small jobs?', a: "We focus on custom homes, remodels and estate care. For smaller repairs, our estate care clients get priority. Tell me what you need and I'll check with Doug." },
+    ],
+    notifyText: true, notifyEmail: true, notifyTo: '508-737-3249 · info@mullenbuilding.com',
+  };
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  };
+  const loadChatSettings = () => Object.assign({}, CHAT_DEFAULTS, store.get(CHAT_SETTINGS_KEY, {}));
+
+  let chatTab = 'leads', leadFilter = 'all';
+  function openChatApp(tab) {
+    showApp('chat-view');
+    setChatTab({ convos: 'leads', try: 'preview' }[tab] || tab || 'leads');
+  }
+  function allLeads() {
+    const tried = store.get(CHAT_LEADS_KEY, []).map(l => Object.assign({ fresh: true }, l));
+    return [...tried.reverse(), ...CHATS];
+  }
+  function renderChatSummary() {
+    const L = allLeads();
+    const n = k => L.filter(c => c.kind === k).length;
+    const booked = L.filter(c => /booked/i.test(c.outcome)).length;
+    const needs = L.filter(c => c.needsYou).length;
+    const fresh = L.filter(c => c.fresh).length;
+    $('chat-summary').innerHTML = `The chat on mullenbuilding.com has handled <span class="num filter-link" onclick="setLeadFilter('all')">${L.length} conversations</span>: <span class="num filter-link" onclick="setLeadFilter('lead')">${n('lead')} homeowners</span> (${booked} site visits booked), <span class="num filter-link" onclick="setLeadFilter('client')">${n('client')} current clients</span>, and <span class="num filter-link" onclick="setLeadFilter('trade')">${n('trade')} trades &amp; vendors</span>. <span class="num filter-link" onclick="setLeadFilter('needs')" style="color: var(--amber);">${needs} need you</span>.${fresh ? ` <span class="block mt-2 text-[15px]" style="color: var(--green);">● ${fresh} new from your test chats.</span>` : ''}`;
+    $('leads-tab-label').textContent = `Leads · ${L.length}`;
+  }
+  function setChatTab(tab) {
+    chatTab = tab;
+    document.querySelectorAll('.chat-tab').forEach(b => b.classList.toggle('is-active', b.dataset.chatTab === tab));
+    ['leads', 'settings', 'preview'].forEach(t => $('chat-' + t).classList.toggle('hidden', t !== tab));
+    $('wc-floating-chat').classList.toggle('hidden', tab === 'settings');
+    if (tab !== 'settings') $('chat-settings').innerHTML = '';
+    renderChatSummary();
+    if (tab === 'leads') renderChatTable();
+    if (tab === 'settings') renderChatSettings();
+    if (tab === 'preview' && !$('chat-frame').src) $('chat-frame').src = 'website/';
+  }
+  function setLeadFilter(f) { leadFilter = f; if (chatTab !== 'leads') setChatTab('leads'); else renderChatTable(); }
+  function chatKindBadge(k) {
+    return { lead: '<span class="badge b-green">Homeowner</span>', client: '<span class="badge b-accent">Client</span>', trade: '<span class="badge b-muted">Trade / vendor</span>', other: '<span class="badge b-amber">Other</span>' }[k] || '';
+  }
+  function leadDetails(c) {
+    const get = k => (c.rows || []).find(r => r[0] === k)?.[1];
+    return [get('Town'), get('Size'), get('Ballpark')].filter(Boolean).join(' · ') || '—';
+  }
+  function renderChatTable() {
+    const filters = [['all', 'All'], ['lead', 'Homeowners'], ['client', 'Clients'], ['trade', 'Trades & vendors'], ['needs', 'Needs you']];
+    const L = allLeads();
+    $('lead-filters').innerHTML = filters.map(([k, l]) => {
+      const n = k === 'all' ? L.length : k === 'needs' ? L.filter(c => c.needsYou).length : L.filter(c => c.kind === k).length;
+      const on = leadFilter === k;
+      return `<button onclick="setLeadFilter('${k}')" class="pressable text-[13.5px] px-3.5 py-1.5 rounded-full border" style="border-color: ${on ? 'var(--ink)' : 'var(--rule)'}; background: ${on ? 'var(--ink)' : 'var(--surface)'}; color: ${on ? 'var(--bg)' : 'var(--ink-2)'};">${l} · ${n}</button>`;
+    }).join('');
+    $('clear-test-leads').classList.toggle('hidden', !L.some(c => c.fresh));
+    const rows = L.filter(c => leadFilter === 'all' || (leadFilter === 'needs' ? c.needsYou : c.kind === leadFilter));
+    const newBadge = c => c.fresh ? '<span class="badge b-green ml-2">New</span>' : '';
+    $('chat-table').innerHTML = !rows.length ? `<div class="px-5 py-10 text-center text-[14.5px]" style="color: var(--ink-muted);">Nothing here yet.</div>` : `
+      <table class="w-full text-[15px] hidden md:table">
+        <thead><tr class="border-b text-[13px] font-medium" style="border-color: var(--rule); color: var(--ink-muted);"><th class="text-left px-5 py-3.5">Who</th><th class="text-left px-5 py-3.5">Looking for</th><th class="text-left px-5 py-3.5">Details</th><th class="text-left px-5 py-3.5">Outcome</th><th class="text-left px-5 py-3.5">When</th></tr></thead>
+        <tbody>${rows.map(c => `
+          <tr class="row border-t cursor-pointer" style="border-color: var(--rule);" onclick="openLead('${c.id}')">
+            <td class="px-5 py-4"><div class="font-medium">${esc(c.who)}${newBadge(c)}</div><div class="mt-1.5">${chatKindBadge(c.kind)}</div></td>
+            <td class="px-5 py-4 text-[14px]">${esc(c.topic)}</td>
+            <td class="px-5 py-4 text-[13.5px]" style="color: var(--ink-2);">${esc(leadDetails(c))}</td>
+            <td class="px-5 py-4 text-[14px]" style="color: ${c.needsYou ? 'var(--amber)' : 'var(--ink-2)'}; font-weight: ${c.needsYou ? 600 : 400};">${esc(c.outcome)}</td>
+            <td class="px-5 py-4 text-[13.5px]" style="color: var(--ink-muted);">${esc(c.when)}</td>
+          </tr>`).join('')}</tbody>
+      </table>
+      <div class="md:hidden">${rows.map((c, i) => `
+        <div class="px-4 py-4 cursor-pointer ${i ? 'border-t' : ''}" style="border-color: var(--rule);" onclick="openLead('${c.id}')">
+          <div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-medium">${esc(c.who)}${newBadge(c)}</div><div class="text-[13px] mt-1" style="color: var(--ink-2);">${esc(c.topic)}</div></div>${chatKindBadge(c.kind)}</div>
+          <div class="text-[13px] mt-2" style="color: ${c.needsYou ? 'var(--amber)' : 'var(--ink-muted)'};">${esc(c.outcome)} · ${esc(c.when)}</div>
+        </div>`).join('')}</div>`;
+  }
+  function openLead(id) {
+    const c = allLeads().find(x => x.id === id); if (!c) return;
+    $('drawer-kicker').textContent = `Website chat · ${c.when}`;
+    $('drawer-name').textContent = c.who;
+    $('drawer-sub').textContent = c.outcome;
+    const summary = c.rows && c.rows.length ? `
+      <div><div class="section-label mb-2">Summary from the chat</div>
+        <div class="rounded-[12px] border px-4 text-[14px]" style="border-color: var(--rule); background: #fff;">${c.rows.map(([k, v]) => `<div class="kv"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join('')}</div></div>` : '';
+    const convo = `<div><div class="section-label mb-2">Conversation</div><div class="space-y-2.5">${(c.transcript || []).map(([w, t]) => w === 'bot'
+      ? `<div class="flex"><div class="max-w-[85%] rounded-[14px] rounded-bl-[4px] px-3.5 py-2 text-[14px] leading-[1.5] whitespace-pre-line" style="background: var(--hover);">${esc(t)}</div></div>`
+      : `<div class="flex justify-end"><div class="max-w-[85%] rounded-[14px] rounded-br-[4px] px-3.5 py-2 text-[14px] leading-[1.5]" style="background: var(--accent); color: #fff;">${esc(t)}</div></div>`).join('')}</div></div>`;
+    $('drawer-body').innerHTML = summary + convo;
+    const primary = c.kind === 'lead' ? 'Reply + add to pipeline' : c.kind === 'trade' ? 'Add to sub list' : 'Reply';
+    $('drawer-foot').innerHTML = `<button onclick="closeDrawer(); showToast('Marked as handled')" class="pressable btn-secondary flex-1 text-[14.5px] font-medium px-4 py-2.5 rounded-full">Mark handled</button><button onclick="closeDrawer(); showToast('Done: ${primary.toLowerCase()}')" class="pressable btn-primary flex-1 text-[14.5px] font-medium px-4 py-2.5 rounded-full">${primary}</button>`;
+    $('drawer').classList.remove('closed');
+  }
+  function clearTestLeads() { store.set(CHAT_LEADS_KEY, []); renderChatSummary(); renderChatTable(); showToast('Test leads cleared'); }
+  function exportLeadsCsv() {
+    const L = allLeads();
+    const keys = ['Project', 'Town', 'Size', 'Start', 'Ballpark', 'Site visit', 'Contact'];
+    const q = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+    const csv = [['Who', 'Type', 'Looking for', 'Outcome', 'When', ...keys].map(q).join(','),
+      ...L.map(c => [c.who, c.kind, c.topic, c.outcome, c.when, ...keys.map(k => (c.rows || []).find(r => r[0] === k)?.[1] || '')].map(q).join(','))].join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'mullen-website-leads.csv'; a.click();
+    showToast(`Downloaded ${L.length} leads`);
+  }
+  function wcChatSubmit() {
+    const el = $('wc-chat-input'); const t = el.value.trim().toLowerCase(); el.value = '';
+    if (!t) return;
+    if (/greet|say|welcome|price|ballpark|faq|question|hours|rule|setting|visit time/.test(t)) { setChatTab('settings'); return showToast('Opened Chat settings. Change it there and hit Save & publish'); }
+    if (/need|follow|call back|urgent/.test(t)) return setLeadFilter('needs');
+    if (/client/.test(t)) return setLeadFilter('client');
+    if (/trade|sub|vendor|contractor/.test(t)) return setLeadFilter('trade');
+    if (/lead|homeowner|who|visit|booked/.test(t)) return setLeadFilter('lead');
+    if (/preview|try|test|site/.test(t)) return setChatTab('preview');
+    if (/csv|export|download/.test(t)) return exportLeadsCsv();
+    showToast('In the full build I\'d answer from your chat history');
+  }
+
+  // A chat finished in the preview (or another tab) lands here right away
+  window.addEventListener('storage', e => {
+    if (e.key !== CHAT_LEADS_KEY || $('chat-view').classList.contains('hidden')) return;
+    renderChatSummary();
+    if (chatTab === 'leads') renderChatTable();
+    else showToast('New lead from the website chat');
+  });
+
+  // ---------- Settings Mullen can edit ----------
+  function field(label, hint, inner) {
+    return `<label class="block"><div class="text-[13.5px] font-medium">${label}</div>${hint ? `<div class="text-[12.5px] mt-0.5" style="color: var(--ink-muted);">${hint}</div>` : ''}<div class="mt-2">${inner}</div></label>`;
+  }
+  const inputCls = 'w-full rounded-[10px] border px-3 py-2.5 text-[14.5px] outline-none focus:border-[var(--ink-2)]';
+  const inputSty = 'border-color: var(--rule); background: #fff;';
+  function toggleRow(id, label, hint, on) {
+    return `<label class="flex items-start justify-between gap-4 py-3 border-t first:border-t-0 cursor-pointer" style="border-color: var(--rule);">
+      <div><div class="text-[14.5px]">${label}</div>${hint ? `<div class="text-[12.5px] mt-0.5" style="color: var(--ink-muted);">${hint}</div>` : ''}</div>
+      <input type="checkbox" id="${id}" ${on ? 'checked' : ''} onchange="markDirty()" class="mt-1 w-5 h-5 shrink-0" style="accent-color: var(--accent);" /></label>`;
+  }
+  function card(title, sub, body) {
+    return `<div class="rounded-[16px] border p-5" style="border-color: var(--rule); background: var(--surface);"><div class="text-[16px] font-semibold">${title}</div>${sub ? `<div class="text-[13px] mt-0.5 mb-4" style="color: var(--ink-muted);">${sub}</div>` : '<div class="mb-4"></div>'}${body}</div>`;
+  }
+  function faqRow(f, i) {
+    return `<div class="faq-row rounded-[12px] border p-3 mb-2.5" style="border-color: var(--rule); background: #fff;">
+      <div class="flex items-center gap-2"><input class="faq-q flex-1 text-[14.5px] font-medium outline-none bg-transparent" value="${esc(f.q)}" placeholder="Question visitors ask" oninput="markDirty()" />
+      <button onclick="this.closest('.faq-row').remove(); markDirty()" class="text-[12.5px] px-2 py-1 rounded-full hover:bg-[var(--hover)]" style="color: var(--ink-muted);">Remove</button></div>
+      <textarea class="faq-a w-full mt-1.5 text-[14px] outline-none bg-transparent resize-none" rows="2" placeholder="How the chat should answer" oninput="markDirty()" style="color: var(--ink-2);">${esc(f.a)}</textarea></div>`;
+  }
+  function renderChatSettings() {
+    const S = loadChatSettings();
+    const num = (id, v) => `<input id="${id}" type="number" value="${v}" oninput="markDirty()" class="${inputCls} mono" style="${inputSty}" />`;
+    $('chat-settings').innerHTML = `
+      <p class="text-[15px] mb-5 max-w-[760px]" style="color: var(--ink-2);">Change what the chat says and asks. Save, and it's live on the website right away. No developer needed.</p>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-[90px]">
+        ${card('Greeting', 'The first thing visitors see.', `
+          <div class="space-y-4">
+            ${field('Welcome message', '', `<textarea id="set-greeting" rows="2" oninput="markDirty()" class="${inputCls} resize-none" style="${inputSty}">${esc(S.greeting)}</textarea>`)}
+            ${field('Follow-up question', 'Asked before the Homeowner / Client / Contractor / Other buttons.', `<input id="set-askWho" value="${esc(S.askWho)}" oninput="markDirty()" class="${inputCls}" style="${inputSty}" />`)}
+            ${field('Hours shown in the chat header', '', `<input id="set-hours" value="${esc(S.hours)}" oninput="markDirty()" class="${inputCls}" style="${inputSty}" />`)}
+          </div>`)}
+        ${card('What to ask homeowners', 'Project type and town are always asked. Turn the rest on or off.', `
+          <div>
+            ${toggleRow('set-askSize', 'Size of the project', '', S.askSize)}
+            ${toggleRow('set-askTimeline', 'When they want to start', '', S.askTimeline)}
+            ${toggleRow('set-showBallpark', 'Show a ballpark price', 'Uses the price ranges below.', S.showBallpark)}
+            ${toggleRow('set-askPlans', 'Whether they have an architect', '', S.askPlans)}
+            ${toggleRow('set-offerVisit', 'Offer a site visit with Doug', 'Uses the visit times below.', S.offerVisit)}
+          </div>`)}
+        ${card('Ballpark prices', 'What the chat quotes as a rough range. Never a firm number.', `
+          <div class="grid grid-cols-2 gap-3">
+            ${field('Kitchen / bath low ($K)', '', num('set-kitchenLo', S.kitchenLo))}${field('Kitchen / bath high ($K)', '', num('set-kitchenHi', S.kitchenHi))}
+            ${field('Additions low ($/sf)', '', num('set-addLo', S.addLo))}${field('Additions high ($/sf)', '', num('set-addHi', S.addHi))}
+            ${field('Custom homes low ($/sf)', '', num('set-newLo', S.newLo))}${field('Custom homes high ($/sf)', '', num('set-newHi', S.newHi))}
+          </div>`)}
+        ${card('Site visits', "Times the chat can offer. In the full version this reads Doug's calendar.", `
+          ${field('Open times (comma separated)', '', `<input id="set-visitTimes" value="${esc(S.visitTimes)}" oninput="markDirty()" class="${inputCls}" style="${inputSty}" />`)}`)}
+        ${card('Common questions', "If a visitor asks something like these, the chat answers with your words.", `
+          <div id="faq-list">${S.faqs.map(faqRow).join('')}</div>
+          <button onclick="addFaq()" class="pressable btn-secondary text-[13.5px] font-medium px-4 py-2 rounded-full mt-1">+ Add a question</button>`)}
+        ${card('Rules the chat follows', 'Plain English. The assistant checks every answer against these.', `
+          <textarea id="set-rules" rows="5" oninput="markDirty()" class="${inputCls} resize-none" style="${inputSty}">${esc(S.rules)}</textarea>`)}
+        ${card('Notify me', 'How Doug hears about new leads.', `
+          <div>
+            ${toggleRow('set-notifyText', 'Text me when a site visit is booked', '', S.notifyText)}
+            ${toggleRow('set-notifyEmail', 'Email me every new lead with the summary', '', S.notifyEmail)}
+          </div>
+          <div class="mt-3">${field('Send to', '', `<input id="set-notifyTo" value="${esc(S.notifyTo)}" oninput="markDirty()" class="${inputCls}" style="${inputSty}" />`)}</div>`)}
+      </div>
+      <div id="settings-bar" class="fixed left-0 right-0 bottom-0 z-30 border-t px-4 md:px-8 py-3" style="border-color: var(--rule); background: var(--bg);">
+        <div class="max-w-[1200px] mx-auto flex items-center justify-between gap-3">
+          <div id="settings-status" class="text-[13.5px]" style="color: var(--ink-muted);">All changes saved · live on the website</div>
+          <div class="flex items-center gap-2">
+            <button onclick="resetChatSettings()" class="pressable btn-ghost text-[13.5px] font-medium px-3 py-2 rounded-full">Reset to defaults</button>
+            <button onclick="saveChatSettings()" class="pressable btn-primary text-[14px] font-medium px-5 py-2 rounded-full">Save &amp; publish</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  function markDirty() { const el = $('settings-status'); if (el) { el.textContent = 'Unsaved changes'; el.style.color = 'var(--amber)'; } }
+  function addFaq() { $('faq-list').insertAdjacentHTML('beforeend', faqRow({ q: '', a: '' })); markDirty(); }
+  function saveChatSettings() {
+    const v = id => $(id).value.trim(), c = id => $(id).checked, n = id => Math.max(0, +$(id).value || 0);
+    const S = {
+      greeting: v('set-greeting'), askWho: v('set-askWho'), hours: v('set-hours'),
+      askSize: c('set-askSize'), askTimeline: c('set-askTimeline'), showBallpark: c('set-showBallpark'), askPlans: c('set-askPlans'), offerVisit: c('set-offerVisit'),
+      kitchenLo: n('set-kitchenLo'), kitchenHi: n('set-kitchenHi'), addLo: n('set-addLo'), addHi: n('set-addHi'), newLo: n('set-newLo'), newHi: n('set-newHi'),
+      visitTimes: v('set-visitTimes'), rules: v('set-rules'),
+      faqs: [...document.querySelectorAll('#faq-list .faq-row')].map(r => ({ q: r.querySelector('.faq-q').value.trim(), a: r.querySelector('.faq-a').value.trim() })).filter(f => f.q && f.a),
+      notifyText: c('set-notifyText'), notifyEmail: c('set-notifyEmail'), notifyTo: v('set-notifyTo'),
+    };
+    if (!store.set(CHAT_SETTINGS_KEY, S)) return showToast("Couldn't save in this browser");
+    const el = $('settings-status'); el.textContent = 'Saved just now · live on the website'; el.style.color = 'var(--green)';
+    if ($('chat-frame').src) $('chat-frame').src = 'website/';
+    showToast('Saved. The website chat is updated');
+  }
+  function resetChatSettings() { store.set(CHAT_SETTINGS_KEY, {}); renderChatSettings(); showToast('Back to the default settings'); }
+
+  // =====================================================================
+  // Drawer / modal / misc
+  // =====================================================================
+  function closeDrawer() { $('drawer').classList.add('closed'); }
+  function closeModal() { $('modal').classList.add('hidden'); $('modal-card').style.maxWidth = ''; }
+
+  function toggleMic() {
+    const b = $('mic-btn'); const on = b.dataset.on === '1';
+    b.dataset.on = on ? '0' : '1';
+    b.style.background = on ? '' : 'var(--amber)'; b.style.color = on ? '' : '#fff';
+  }
+  function toggleSidebar() { $('sidebar').classList.toggle('is-open'); $('sidebar-backdrop').classList.toggle('is-open'); }
+  document.querySelectorAll('#sidebar button').forEach(b => b.addEventListener('click', () => {
+    if (window.matchMedia('(max-width: 767px)').matches) { $('sidebar').classList.remove('is-open'); $('sidebar-backdrop').classList.remove('is-open'); }
+  }));
+
+  // Wishlist
+  let wlTimer = null, wlStart = 0;
+  function openWishlist() { $('wishlist-view').classList.remove('hidden'); showWishlistMic(); }
+  function closeWishlist() { $('wishlist-view').classList.add('hidden'); stopWlTimer(); }
+  function showWishlistMic() { $('wishlist-capture').classList.remove('hidden'); $('wishlist-type').classList.add('hidden'); $('wishlist-sent').classList.add('hidden'); }
+  function showWishlistType() { stopWlTimer(); $('wishlist-capture').classList.add('hidden'); $('wishlist-type').classList.remove('hidden'); $('wishlist-sent').classList.add('hidden'); setTimeout(() => $('wishlist-textarea').focus(), 50); }
+  function stopWlTimer() { clearInterval(wlTimer); wlTimer = null; $('wishlist-mic-timer').classList.add('hidden'); $('wishlist-mic-label').textContent = 'Tap to record'; $('wishlist-mic-btn').style.background = 'var(--accent)'; }
+  function toggleWishlistMic() {
+    if (wlTimer) { stopWlTimer(); return submitWishlist(); }
+    wlStart = Date.now();
+    $('wishlist-mic-btn').style.background = 'var(--amber)';
+    $('wishlist-mic-label').textContent = 'Recording… tap to finish';
+    $('wishlist-mic-timer').classList.remove('hidden');
+    wlTimer = setInterval(() => { const s = Math.floor((Date.now() - wlStart) / 1000); $('wishlist-mic-timer').textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }, 250);
+  }
+  function submitWishlist() { $('wishlist-capture').classList.add('hidden'); $('wishlist-type').classList.add('hidden'); $('wishlist-sent').classList.remove('hidden'); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (!$('modal').classList.contains('hidden')) return closeModal();
+    if (!$('drawer').classList.contains('closed')) return closeDrawer();
+    if (!$('wishlist-view').classList.contains('hidden')) return closeWishlist();
+    closeApps();
+  });
+
+  // =====================================================================
+  // Guided tour
+  // =====================================================================
+  let tourStep = 0, tourTarget = null;
+  function showTooltip(el, text) {
+    if (!el) return;
+    $('tooltip-text').textContent = text;
+    if (tourTarget) tourTarget.classList.remove('tour-pulse');
+    tourTarget = el; el.classList.add('tour-pulse');
+    $('tooltip').classList.add('is-visible');
+    requestAnimationFrame(positionTooltip);
+  }
+  function positionTooltip() {
+    const tt = $('tooltip'); if (!tourTarget) return;
+    const r = tourTarget.getBoundingClientRect();
+    if (!r.width && !r.height) return hideTooltip();
+    const tr = tt.getBoundingClientRect(), m = 12;
+    let left = r.left + r.width / 2 - tr.width / 2, top = r.top - tr.height - 8, flip = false;
+    if (top < m) { top = r.bottom + 8; flip = true; }
+    left = Math.max(m, Math.min(window.innerWidth - tr.width - m, left));
+    tt.classList.toggle('flip-down', flip);
+    tt.style.left = left + 'px'; tt.style.top = top + 'px';
+    $('tooltip-caret').style.marginLeft = Math.max(8, Math.min(tr.width - 20, r.left + r.width / 2 - left - 6)) + 'px';
+  }
+  function hideTooltip() { $('tooltip').classList.remove('is-visible'); if (tourTarget) tourTarget.classList.remove('tour-pulse'); tourTarget = null; }
+  function endTour() { tourStep = 0; hideTooltip(); }
+  function startTour() {
+    tourStep = 1;
+    setTimeout(() => showTooltip(document.querySelector('[data-wf="scope"]'), 'Try it'), 700);
+  }
+  document.addEventListener('click', e => {
+    if (tourStep === 1 && e.target.closest('[data-wf="scope"]')) {
+      tourStep = 2; hideTooltip();
+      setTimeout(() => {
+        const rows = [...document.querySelectorAll('[data-scope="saidnawey"]')].filter(el => el.getBoundingClientRect().width > 0);
+        showTooltip(rows[0], "Shepley's quote is back. Open it");
+      }, 500);
+    } else if (tourStep === 2 && e.target.closest('[data-scope="saidnawey"]')) {
+      tourStep = 3; hideTooltip();
+      setTimeout(() => showTooltip($('scope-send'), 'Send to your subs'), 500);
+    } else if (tourStep === 3 && e.target.closest('#scope-send')) {
+      endTour();
+    } else if (tourStep && e.target.closest('#sidebar, #hero-example, .app-view button[onclick^="scopeBack"], [onclick^="closeApps"]')) {
+      endTour();
+    }
+  });
+  window.addEventListener('resize', positionTooltip);
+  window.addEventListener('scroll', positionTooltip, true);
+
+  function syncBannerHeight() {
+    const b = $('attribution-banner');
+    document.documentElement.style.setProperty('--banner-h', (b ? b.offsetHeight : 0) + 'px');
+    positionTooltip();
+  }
+  window.addEventListener('resize', syncBannerHeight);
+
+  // Init
+  syncBannerHeight();
+  renderWorkflows();
+  if (document.readyState === 'complete') startTour(); else window.addEventListener('load', startTour);
+</script>
+</body>
+</html>
