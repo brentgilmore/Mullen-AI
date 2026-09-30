@@ -1667,6 +1667,28 @@
       </div>`;
   }
 
+  // One plain line per sub: what they're being asked to price
+  const SCOPE_WHAT = {
+    'Excavation & foundation': '16×24 frost wall and footings, dig and backfill, slab under the bath',
+    'Roofing': 'New roof over the addition, Landmark shingles to match, tie-in at the existing roof',
+    'Electrical': 'Circuits and lights for the new rooms, outlets, heated-floor thermostat, mini-split hookup',
+    'Plumbing': 'Full bath: shower, vanity, toilet, tie into the existing lines',
+    'HVAC (mini-split)': 'Mini-split heads for the new rooms and an outdoor condenser',
+    'Insulation': 'Spray foam in the roof, batts in the walls',
+    'Drywall & plaster': 'Hang, tape and finish the new rooms',
+    'Drywall': 'Hang, tape and finish the new rooms',
+    'Tile': 'Shower walls and bath floor',
+    'Plumbing & gas': 'New gas line to the island range, move the sink, mudroom utility sink',
+    'Countertops': 'Quartz counters for the kitchen and island',
+    'Structural engineer': 'Check the garage footings can carry a second floor, stamped letter for the permit',
+    'Foundation (helical piers)': 'Helical piers for the 14×20 sunroom',
+    'Windows & skylights': 'Sunroom windows and 3 skylights, supply only',
+    'Radiant floor': 'Electric radiant floor under tile, about 280 sf',
+  };
+  const JOB_WHAT = { liu: { 'Roofing': 'Raise the garage roof to match the house, Landmark in Weathered Wood', 'Electrical': 'Price a 200A panel upgrade, plus circuits and lights for the suite', 'Plumbing': 'Full bath over the garage, run supply and drain through the garage below', 'HVAC (mini-split)': 'Two mini-split heads: bedroom and bonus room' },
+                     lindqvist: { 'Roofing': 'Cathedral roof tied into the existing hip roof, flash 3 skylights', 'Electrical': 'Recessed lights, outlets, radiant-floor thermostat and circuit', 'Insulation': 'Spray foam in the cathedral ceiling, insulate the floor over the piers' } };
+  const whatFor = (job, t) => (JOB_WHAT[job.id] || {})[t.t] || SCOPE_WHAT[t.t] || '';
+
   function renderScopeJob() {
     const job = scopeJob();
     const sent = sentFor(job);
@@ -1675,27 +1697,34 @@
     const inHouse = job.trades.filter(t => t.status === 'inhouse').map(t => t.t.toLowerCase());
     const isSent = Object.keys(sent).length > 0;
     const bids = Object.values(sent).filter(v => v.state === 'bid');
+    const who = job.client.split(' & ')[0].split(' ')[0] === job.client.split(' ')[0] ? 'The ' + job.client.split(' ').pop() + 's' : job.client;
     const status = i => {
       const st = sent[i];
       if (!st) return '';
-      if (st.state === 'bid') return `<span class="badge b-green">Bid in · ${usd0(st.bid)}</span>`;
-      if (st.state === 'viewed') return `<span class="badge b-accent">Opened</span>`;
+      if (st.state === 'bid') return `<span class="badge b-green">Price in · ${usd0(st.bid)}</span>`;
+      if (st.state === 'viewed') return `<span class="badge b-accent">Opened it</span>`;
       return `<span class="badge b-muted">Sent ✓</span>`;
     };
     $('scope-body').innerHTML = `
       <div class="max-w-[820px] mx-auto">
-        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-6">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
           <div class="min-w-0">
             <div class="text-[24px] font-semibold leading-tight">${job.job}</div>
             <div class="text-[14px] mt-1" style="color: var(--ink-muted);">${job.client} · ${job.addr}</div>
           </div>
-          <div class="shrink-0 flex items-center gap-2">${job.cameFrom ? `<span class="text-[12.5px]" style="color: var(--ink-muted);">Came in from</span><span class="badge b-muted">${job.cameFrom}</span>` : ''}</div>
+          <div class="shrink-0">${isSent ? `<span class="badge b-muted">Sent to subs</span>` : `<span class="badge b-accent">Ready to send</span>`}</div>
         </div>
 
-        <div class="section-label mb-2">1 · The job</div>
+        <div class="rounded-[14px] px-5 py-4 mt-5 text-[15px] leading-[1.6]" style="background: var(--hover); color: var(--ink-2);">
+          ${isSent
+            ? `<strong style="color: var(--ink);">Out for pricing.</strong> Each sub got a text and email with their part of the job. Their prices come back here${bids.length ? `, and <strong style="color: var(--ink);">${bids.length} ${bids.length > 1 ? 'are' : 'is'} in so far (${usd0(bids.reduce((a, v) => a + v.bid, 0))})</strong>` : ''}.`
+            : `<strong style="color: var(--ink);">What this is:</strong> ${who} asked for this project. To get it priced, I wrote up the part each of your subs would do, so they can send you a number. Look it over, untick anyone you don't want to ask, then send.`}
+        </div>
+
+        <div class="section-label mt-8 mb-2">The request</div>
         <div class="rounded-[16px] border p-5 md:p-6" style="border-color: var(--rule); background: var(--surface);">
           <p class="text-[16px] leading-[1.6]">${job.summary}</p>
-          <div class="flex flex-wrap gap-2 mt-4">${job.source.split(' + ').map(x => `<span class="text-[12.5px] px-3 py-1 rounded-full" style="background: var(--hover); color: var(--ink-2);">${x}</span>`).join('')}</div>
+          <div class="text-[13px] mt-3" style="color: var(--ink-muted);">From: ${job.source.split(' + ').join(' · ')}</div>
           ${job.notes ? `
           <div class="mt-5 rounded-[12px] p-4" style="background: var(--green-soft);">
             <div class="text-[14px] font-semibold" style="color: #173F29;">${job.notes.title}</div>
@@ -1703,30 +1732,30 @@
           </div>` : ''}
         </div>
 
-        <div class="section-label mt-8 mb-2">2 · Who gets a scope</div>
+        <div class="section-label mt-8 mb-2">What each sub will be asked to price</div>
         <div class="rounded-[16px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
           ${subTrades(job).map(([t, i], k) => `
-            <div class="flex items-center gap-3 md:gap-4 px-4 md:px-5 py-3.5 ${k ? 'border-t' : ''}" style="border-color: var(--rule);">
-              <input type="checkbox" ${checked.has(i) || sent[i] ? 'checked' : ''} ${isSent ? 'disabled' : ''} onchange="toggleScopeTrade(${i}, this.checked)" class="w-5 h-5 shrink-0" style="accent-color: var(--accent);" />
+            <div class="flex items-start gap-3 md:gap-4 px-4 md:px-5 py-4 ${k ? 'border-t' : ''}" style="border-color: var(--rule);">
+              <input type="checkbox" ${checked.has(i) || sent[i] ? 'checked' : ''} ${isSent ? 'disabled' : ''} onchange="toggleScopeTrade(${i}, this.checked)" class="w-5 h-5 shrink-0 mt-0.5" style="accent-color: var(--accent);" title="Send to ${t.sub}" />
               <div class="min-w-0 flex-1">
-                <div class="text-[15px] font-medium">${t.t}</div>
-                <div class="text-[13px] mt-0.5" style="color: var(--ink-muted);">${t.sub} · ${t.prefilled} of ${t.total} filled in for them</div>
+                <div class="text-[15px]"><span class="font-semibold">${t.t}</span> <span style="color: var(--ink-muted);">· ${t.sub}</span></div>
+                <div class="text-[14px] mt-1 leading-[1.5]" style="color: var(--ink-2);">${whatFor(job, t)}</div>
               </div>
-              <div class="shrink-0 flex items-center gap-2">
+              <div class="shrink-0 flex flex-col md:flex-row items-end md:items-center gap-1.5 md:gap-2">
                 ${status(i)}
-                <button data-preview="${i}" onclick="previewSubView('${job.id}', ${i})" class="pressable btn-ghost text-[13px] font-medium px-3 py-1.5 rounded-full" style="color: var(--accent);">Preview</button>
+                <button data-preview="${i}" onclick="previewSubView('${job.id}', ${i})" class="pressable btn-ghost text-[13px] font-medium px-3 py-1.5 rounded-full whitespace-nowrap" style="color: var(--accent);">See their scope</button>
               </div>
             </div>`).join('')}
         </div>
-        ${inHouse.length ? `<div class="text-[13px] mt-2 px-1" style="color: var(--ink-muted);">Your crew handles ${inHouse.join(', ')}, so no scope goes out for that.</div>` : ''}
+        ${inHouse.length ? `<div class="text-[13px] mt-2 px-1" style="color: var(--ink-muted);">Not listed: ${inHouse.join(', ')}. Your own crew does that.</div>` : ''}
 
-        <div class="mt-6">
-          ${isSent
-            ? `<div class="rounded-[14px] px-5 py-4 text-[15px] leading-[1.55]" style="background: var(--green-soft); color: #173F29;"><strong>Sent to ${Object.keys(sent).length} subs</strong> by text and email · ${job.due.toLowerCase().startsWith('bids') ? job.due.toLowerCase() : 'bids due in 7 days'}.${bids.length ? ` <strong>${bids.length} bid${bids.length > 1 ? 's' : ''} in so far, ${usd0(bids.reduce((a, v) => a + v.bid, 0))}.</strong>` : ''} Bids show up here as they come in.</div>`
-            : `<button id="scope-send" onclick="sendScopesNow()" class="pressable btn-primary w-full md:w-auto text-[16px] font-medium px-7 py-3.5 rounded-full flex items-center justify-center gap-2" ${checked.size ? '' : 'disabled style="opacity: .5"'}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
-                Send to ${checked.size} sub${checked.size === 1 ? '' : 's'}</button>`}
-        </div>
+        ${isSent ? '' : `
+        <div class="mt-6 flex flex-col md:flex-row md:items-center gap-3">
+          <button id="scope-send" onclick="sendScopesNow()" class="pressable btn-primary w-full md:w-auto text-[16px] font-medium px-7 py-3.5 rounded-full flex items-center justify-center gap-2" ${checked.size ? '' : 'disabled style="opacity: .5"'}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+            Send to ${checked.size} sub${checked.size === 1 ? '' : 's'}</button>
+          <div class="text-[13px]" style="color: var(--ink-muted);">Each gets a text and an email with their part and a link to send back a price.</div>
+        </div>`}
       </div>`;
   }
   function toggleScopeTrade(i, on) { const c = scopeChecked[scopeJobId]; on ? c.add(i) : c.delete(i); renderScope(); }
@@ -1762,17 +1791,17 @@
 
   function previewSubView(scopeId, i) {
     const s = SCOPES.find(x => x.id === scopeId); const t = s.trades[i];
-    const isElec = /electric/i.test(t.t);
+    const isElec = /electric/i.test(t.t) && s.id === 'whitcomb';
     const filled = isElec ? ELECTRICAL_SCOPE.filled : genericTradeFields(s, t);
     const open = isElec ? ELECTRICAL_SCOPE.open : ['Anything in the plans that doesn\'t work for your trade?', 'Your price, and how long it\'s good for', 'Earliest start date'];
     $('modal-card').style.maxWidth = '440px';
     $('modal-card').innerHTML = `
       <div class="px-5 pt-5 pb-4 border-b flex items-start justify-between gap-3" style="border-color: var(--rule);">
-        <div><div class="text-[12.5px]" style="color: var(--ink-muted);">What ${t.sub} sees on their phone</div><div class="text-[18px] font-semibold mt-1">${t.t} scope</div><div class="text-[13px] mt-0.5" style="color: var(--ink-muted);">Mullen Building · ${s.job}</div></div>
+        <div><div class="text-[12.5px]" style="color: var(--ink-muted);">This is what ${t.sub} gets on their phone</div><div class="text-[18px] font-semibold mt-1">${t.t}: price request</div><div class="text-[13px] mt-0.5" style="color: var(--ink-muted);">Mullen Building · ${s.job}</div></div>
         <button onclick="closeModal()" class="pressable p-2 rounded-full -m-1" style="color: var(--ink-muted);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="flex-1 overflow-y-auto scroll-hide px-5 py-4 space-y-4">
-        <div class="rounded-[12px] px-3.5 py-3 text-[13.5px]" style="background: var(--accent-soft); color: var(--accent-deep);">Hi, Doug's office here. We've filled in everything we know from the plans and photos. Check it, answer ${open.length} questions, and add your price. Takes about 5 minutes.</div>
+        <div class="rounded-[12px] px-3.5 py-3 text-[13.5px]" style="background: var(--accent-soft); color: var(--accent-deep);">Hi, it's Doug at Mullen. Here's the ${t.t.toLowerCase()} work for the ${s.client ? s.client.split(' ').pop() + 's\' ' + s.job.split(' ').slice(1).join(' ').toLowerCase() : s.job}. We've written up what we know. Check it, answer ${open.length} quick questions, and send us your price.</div>
         <div class="space-y-1.5">${filled.slice(0, 6).map(([k, v]) => `<div class="flex gap-2.5 text-[13.5px] leading-[1.45]"><span class="mt-0.5 shrink-0" style="color: var(--green);">${ICON.check}</span><div><span class="font-medium">${k}:</span> <span style="color: var(--ink-2);">${v}</span></div></div>`).join('')}
           <div class="text-[12.5px] pl-6" style="color: var(--ink-muted);">+ ${Math.max(0, filled.length - 6)} more · tap to edit anything that's wrong</div></div>
         ${open.map((q, k) => `<div><div class="text-[13.5px] font-medium mb-1.5">${k + 1}. ${q}</div>${/price/i.test(q) ? `<div class="flex items-center gap-2 rounded-[10px] border px-3 py-2.5" style="border-color: var(--rule); background: #fff;"><span style="color: var(--ink-muted);">$</span><input class="flex-1 bg-transparent outline-none text-[14px] mono" placeholder="0.00" /></div>` : `<textarea rows="2" class="w-full rounded-[10px] border px-3 py-2 text-[14px] outline-none resize-none" style="border-color: var(--rule); background: #fff;" placeholder="Type or tap the mic…"></textarea>`}</div>`).join('')}
@@ -1803,12 +1832,12 @@
       SCOPES.unshift({
         id: 'lindqvist', job: 'Lindqvist Sunroom', client: 'Erik & Anna Lindqvist', addr: '62 Putnam Ave, Cotuit',
         summary: '14×20 sunroom off the kitchen on piers. Cathedral ceiling, 3 skylights, ties into the existing hip roof, electric radiant floor. Done by Memorial Day.',
-        source: 'Your description', due: 'Ready for you to review', created: 'Today', cameFrom: 'Your description',
+        source: 'Typed in by Doug', due: 'Ready for you to review', created: 'Today', cameFrom: 'Typed in by Doug',
         trades: [
           { t: 'Foundation (helical piers)', sub: 'Barnstable Site Works', prefilled: 12, total: 14, status: 'draft' },
           { t: 'Framing', sub: 'Mullen crew (in-house)', prefilled: 16, total: 16, status: 'inhouse' },
           { t: 'Roofing', sub: 'Tidewater Roofing', prefilled: 13, total: 16, status: 'draft' },
-          { t: 'Windows & skylights', sub: 'Shepley (Team Pina)', prefilled: 14, total: 16, status: 'draft' },
+          { t: 'Windows & skylights', sub: 'Coastal Windows & Doors', prefilled: 14, total: 16, status: 'draft' },
           { t: 'Electrical', sub: 'Crocker Electric', prefilled: 15, total: 18, status: 'draft' },
           { t: 'Radiant floor', sub: 'Nauset Plumbing & Heating', prefilled: 11, total: 14, status: 'draft' },
           { t: 'Insulation', sub: 'Bayside Insulation', prefilled: 10, total: 12, status: 'draft' },
@@ -2251,7 +2280,7 @@
       }, 500);
     } else if (tourStep === 2 && e.target.closest('[data-scope="liu"]')) {
       tourStep = 3; hideTooltip();
-      setTimeout(() => showTooltip($('scope-send'), 'Send to your subs'), 500);
+      setTimeout(() => showTooltip($('scope-send'), 'Send it out for prices'), 500);
     } else if (tourStep === 3 && e.target.closest('#scope-send')) {
       endTour();
     } else if (tourStep && e.target.closest('#sidebar, #hero-example, .app-view button[onclick^="scopeBack"], [onclick^="closeApps"]')) {
