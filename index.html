@@ -250,8 +250,8 @@
       </button>
 
       <div class="px-3 pt-5 pb-2 text-[13px] font-medium" style="color: var(--ink-muted);">Yesterday</div>
-      <button onclick="openQuoteRequest('saidnawey', 'compare')" class="thread-item w-full text-left px-3 py-2.5 rounded-[10px]">
-        <span class="text-[14.5px] truncate block">Shepley quote vs. estimate — Saidnawey</span>
+      <button onclick="openQuoteRequest('saidnawey', 'check')" class="thread-item w-full text-left px-3 py-2.5 rounded-[10px]">
+        <span class="text-[14.5px] truncate block">Check Shepley's quote — Saidnawey</span>
       </button>
       <button onclick="openChatApp('convos')" class="thread-item w-full text-left px-3 py-2.5 rounded-[10px]">
         <span class="text-[14.5px] truncate block">Website chats this week</span>
@@ -889,6 +889,32 @@
     { level: 'muted', title: 'Quote expires Oct 4', body: 'Close date on quote 0002860097 is 10/04/26 (30 days from activation). Lumber pricing moves, so lock it in or ask Team Pina to extend.', action: 'Remind me Oct 1' },
   ];
 
+  // What we asked Shepley for vs. what their quote has. One row per group, plus the separate quotes we asked for.
+  // result: match | added | changed | missing | notpriced | open
+  const SAIDNAWEY_CHECK = [
+    ...SAIDNAWEY_GROUPS.map(r => ({ asked: r.g, askedSpec: r.spec, sheets: r.sheets, back: 'Quoted · ' + usd(r.shepley), result: 'match' })),
+    { asked: 'Windows (quote separately)', askedSpec: 'Andersen 400 Series, schedule A–K on sheet 3', sheets: '3, 4', back: 'Not in the frame quote or the ext-door quote', result: 'missing', why: 'Windows are usually the longest lead item, so this is the one to chase first.', action: 'Draft window request' },
+    { asked: 'Exterior doors (quote separately)', askedSpec: 'Schedule A–F on sheet 4', sheets: '4', back: 'Separate quote 2859245 · $14,902.81', result: 'match' },
+    { asked: 'Metal roofing, 55 sf', askedSpec: 'By others (porch roof, sheet 4)', sheets: '4', back: 'Marked "done by others," not priced', result: 'notpriced', why: 'Correct per our request, but nobody has priced it yet.', action: 'Ask Tidewater for a price' },
+  ];
+  const CHECK_OVERRIDES = {
+    'Roofing': { back: 'Landmark Pro + Shadow Ridge hip & ridge, "COLOR TO BE DETERMINED"', result: 'open', why: 'We told them colors would follow. Pick them before the order is released.', action: 'Ask the client' },
+    'Exterior Trim': { result: 'added', why: 'Shepley added a 150\' copper flashing roll ($2,284) and 58 pcs of Azek beadboard for the porch ceilings. Both are on sheet 12, so keep them.' },
+    'Siding': { why: '158 bundles of white cedar at 5" exposure, about 5% extra for waste. Matches the request.' },
+    'Front Porch': { result: 'notpriced', why: '2 brackets on the entry hood are marked "Bracket TBD, not priced, done by others."', action: 'Note for trim sub' },
+    'Balcony Exterior Deck': { result: 'changed', why: 'Shepley\'s own note says the INTEX Hampton rail kit "does not meet graspable stair handrail req." The rear and balcony stairs need a 1-1/2" graspable handrail (780 CMR R311.7.8).', action: 'Add handrail line' },
+  };
+  SAIDNAWEY_CHECK.forEach(r => Object.assign(r, CHECK_OVERRIDES[r.asked] || {}));
+  const CHECK_RESULT = {
+    match:     ['b-green', 'Matches'],
+    added:     ['b-muted', 'Shepley added'],
+    changed:   ['b-red',   'Doesn\'t meet spec'],
+    missing:   ['b-red',   'Missing'],
+    notpriced: ['b-amber', 'Not priced'],
+    open:      ['b-amber', 'Needs your answer'],
+  };
+  const needsLook = r => r.result !== 'match' && r.result !== 'added';
+
   const QUOTE_REQUESTS = [
     {
       id: 'saidnawey', job: 'Saidnawey Residence', addr: '33 Hedge Row, West Yarmouth', scope: 'New build · 3 floors + basement · gambrel',
@@ -1316,7 +1342,7 @@
   function openQuoteRequest(id, tab) {
     showApp('qr-view');
     const qr = QUOTE_REQUESTS.find(q => q.id === id);
-    qrState = { view: 'detail', id, tab: tab || (qr && qr.status === 'received' ? 'compare' : 'package') };
+    qrState = { view: 'detail', id, tab: tab || (qr && qr.status !== 'draft' && qr.status !== 'building' ? 'check' : 'package') };
     renderQr();
   }
   function qrBack() {
@@ -1330,6 +1356,17 @@
     return `<span class="badge b-accent">Draft · ready to send</span>`;
   }
 
+  function qrStages(q) {
+    const at = q.status === 'received' ? 3 : q.status === 'waiting' ? 2 : q.status === 'draft' ? 1 : 0;
+    const names = ['Plans in', 'Sent', 'Back', 'Checked'];
+    const done = q.id === 'saidnawey' ? 4 : at;
+    return `<div class="flex items-center gap-1">${names.map((n, i) => `<div class="flex flex-col items-start" style="width: 64px;"><div class="h-1.5 w-full rounded-full" style="background: ${i < done ? 'var(--green)' : i === done ? 'var(--amber)' : 'var(--rule)'};"></div><div class="text-[11.5px] mt-1" style="color: ${i < done ? 'var(--ink-2)' : 'var(--ink-muted)'};">${n}</div></div>`).join('')}</div>`;
+  }
+  function qrCheckCell(q) {
+    if (q.id === 'saidnawey') return `<span class="badge b-red">${SAIDNAWEY_CHECK.filter(needsLook).length} to fix</span>`;
+    if (q.status === 'waiting') return `<span class="text-[13px]" style="color: var(--ink-muted);">When it comes back</span>`;
+    return `<span class="text-[13px]" style="color: var(--ink-muted);">—</span>`;
+  }
   function renderQr() {
     $('qr-back-label').textContent = qrState.view === 'detail' ? 'All requests' : 'Back';
     $('qr-chat-input').placeholder = qrState.view === 'detail' ? 'Ask about this quote, or have me follow up with Team Pina…' : 'Drop a plan set, or ask about a quote…';
@@ -1339,30 +1376,29 @@
       <div class="max-w-[1200px] mx-auto">
         <div class="mb-5">
           <div class="text-[24px] font-semibold leading-tight">Shepley Quote Requests</div>
-          <div class="text-[14px] mt-1 leading-[1.55] max-w-[780px]" style="color: var(--ink-2);"><span style="color: var(--ink); font-weight: 600;">What it does:</span> Turns an architect's plan set into a complete takeoff request for Shepley, in the groups they quote in. It also gives you a material estimate in minutes, so you can price the job while Shepley does the formal quote.</div>
+          <div class="text-[14px] mt-1 leading-[1.55] max-w-[780px]" style="color: var(--ink-2);"><span style="color: var(--ink); font-weight: 600;">What it does:</span> Turns an architect's plan set into a complete takeoff request for Shepley, in the groups they quote in. When their quote comes back, it checks it line by line against what you asked for and flags anything missed, changed or not priced.</div>
         </div>
         <p class="mb-8 max-w-[880px] text-[18px] md:text-[19px] leading-[1.65]" style="color: var(--ink-2);">
-          You have <span class="num">${QUOTE_REQUESTS.length} quote requests</span> open. Shepley has sent back <span class="num filter-link" onclick="openQuoteRequest('saidnawey','compare')">1</span> (Saidnawey), and <span class="num">${waiting}</span> are still waiting.
+          You have <span class="num">${QUOTE_REQUESTS.length} projects</span> with Shepley. They've sent back <span class="num filter-link" onclick="openQuoteRequest('saidnawey','check')">1</span> (Saidnawey), and I checked it against what we asked for: <span class="num filter-link" onclick="openQuoteRequest('saidnawey','check')">${SAIDNAWEY_CHECK.filter(needsLook).length} things to fix</span>. <span class="num">${waiting}</span> are still waiting.
         </p>
         <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
           <table class="w-full text-[15px] hidden md:table">
             <thead><tr class="border-b text-[13px] font-medium" style="border-color: var(--rule); color: var(--ink-muted);">
-              <th class="text-left px-5 py-3.5">Job</th><th class="text-left px-5 py-3.5">Plans</th><th class="text-left px-5 py-3.5">Sent</th><th class="text-left px-5 py-3.5">Shepley</th><th class="text-right px-5 py-3.5">Estimate</th><th class="text-right px-5 py-3.5">Shepley quote</th>
+              <th class="text-left px-5 py-3.5">Project</th><th class="text-left px-5 py-3.5">Plans</th><th class="text-left px-5 py-3.5">Where it's at</th><th class="text-left px-5 py-3.5">Quote check</th><th class="text-right px-5 py-3.5">Shepley quote</th>
             </tr></thead>
             <tbody>${QUOTE_REQUESTS.map(q => `
               <tr data-qr="${q.id}" class="row border-t cursor-pointer" style="border-color: var(--rule);" onclick="openQuoteRequest('${q.id}')">
                 <td class="px-5 py-4"><div class="font-medium">${q.job}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${q.addr}</div></td>
                 <td class="px-5 py-4 text-[14px]"><div>${q.scope}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${q.sheets} sheets · ${q.architect}</div></td>
-                <td class="px-5 py-4 text-[14px]" style="color: var(--ink-muted);">${q.sent || '—'}</td>
-                <td class="px-5 py-4">${qrStatusBadge(q)}</td>
-                <td class="px-5 py-4 text-right mono text-[14px]">${q.aiTotal ? usd0(q.aiTotal) : '—'}</td>
+                <td class="px-5 py-4"><div class="mb-1.5">${qrStages(q)}</div><div class="text-[12.5px]" style="color: var(--ink-muted);">${q.status === 'received' ? 'Sent ' + q.sent + ' · back ' + q.returned : q.status === 'waiting' ? 'Sent ' + q.sent + ' · day ' + q.days : q.status === 'draft' ? 'Ready to send' : 'Reading plans…'}</div></td>
+                <td class="px-5 py-4">${qrCheckCell(q)}</td>
                 <td class="px-5 py-4 text-right mono text-[14px]">${q.shepleyTotal ? usd0(q.shepleyTotal) : '<span style="color: var(--ink-muted);">pending</span>'}</td>
               </tr>`).join('')}</tbody>
           </table>
           <div class="md:hidden">${QUOTE_REQUESTS.map((q, i) => `
             <div data-qr="${q.id}" class="px-4 py-4 cursor-pointer active:bg-[var(--hover)] ${i ? 'border-t' : ''}" style="border-color: var(--rule);" onclick="openQuoteRequest('${q.id}')">
               <div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-medium">${q.job}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${q.addr}</div></div>${qrStatusBadge(q)}</div>
-              <div class="text-[13px] mt-2 mono" style="color: var(--ink-muted);">Est. ${q.aiTotal ? usd0(q.aiTotal) : '—'}${q.shepleyTotal ? ' · Shepley ' + usd0(q.shepleyTotal) : ''}</div>
+              <div class="mt-3">${qrStages(q)}</div>${q.id === 'saidnawey' ? `<div class="mt-2">${qrCheckCell(q)}</div>` : ''}
             </div>`).join('')}</div>
         </div>
       </div>`;
@@ -1374,15 +1410,16 @@
     const q = QUOTE_REQUESTS.find(x => x.id === qrState.id);
     if (!q) return;
     const isS = q.id === 'saidnawey';
-    const tabs = [['package', 'Request package']];
+    const tabs = [];
+    if (q.sent) tabs.push(['check', isS ? `Sent vs. what came back · ${SAIDNAWEY_CHECK.filter(needsLook).length} to fix` : 'Sent vs. what came back']);
+    tabs.push(['package', 'What we sent']);
     if (q.status === 'received') tabs.push(['compare', 'Shepley vs. estimate']);
-    if (isS) tabs.push(['flags', `Flags · ${SAIDNAWEY_FLAGS.length}`]);
     if (!tabs.find(t => t[0] === qrState.tab)) qrState.tab = 'package';
 
     let content = '';
     if (qrState.tab === 'package') content = renderQrPackage(q);
     if (qrState.tab === 'compare') content = renderQrCompare();
-    if (qrState.tab === 'flags') content = renderQrFlags();
+    if (qrState.tab === 'check') content = renderQrCheck(q);
 
     const timeline = q.status === 'received'
       ? `Progress set dated <strong>8/16</strong> · Shepley's quote dated <strong>Sep 4</strong>`
@@ -1405,7 +1442,7 @@
           ${statCard('Estimate', usd0(q.aiTotal), 'example · materials before tax')}
           ${statCard('Shepley quote', q.shepleyTotal ? usd0(q.shepleyTotal) : 'Pending', q.shepleyTotal ? 'incl. ext doors + tax' : 'Team Pina · Hyannis')}
           ${statCard(isS ? 'Plans → quote' : 'Plan sheets', isS ? '8/18 → 9/4' : q.sheets, isS ? 'progress set to Shepley quote' : q.planSet)}
-          ${statCard(isS ? 'Flags' : 'Shepley', isS ? String(SAIDNAWEY_FLAGS.length) : (q.status === 'waiting' ? 'Day ' + q.days : 'Not sent'), isS ? 'to settle before ordering' : 'Team Pina · Hyannis')}
+          ${statCard(isS ? 'To fix' : 'Shepley', isS ? String(SAIDNAWEY_CHECK.filter(needsLook).length) : (q.status === 'waiting' ? 'Day ' + q.days : 'Not sent'), isS ? 'missed or off-spec in the quote' : 'Team Pina · Hyannis')}
         </div>
 
         <div class="flex items-center gap-1 p-1 rounded-[12px] mb-5 w-fit max-w-full overflow-x-auto scroll-hide" style="background: var(--sidebar);">
@@ -1523,6 +1560,56 @@
         </table>
       </div>`;
   }
+  let checkFilter = 'look';
+  function setCheckFilter(f) { checkFilter = f; renderQrDetail(); }
+  function checkAction(i) {
+    const r = SAIDNAWEY_CHECK[i];
+    const fi = SAIDNAWEY_FLAGS.findIndex(f => f.action === r.action);
+    if (fi >= 0) flagAction(fi); else showToast('Done');
+  }
+  function renderQrCheck(q) {
+    if (q.id !== 'saidnawey') {
+      const rows = q.id === 'whitcomb' ? 8 : q.id === 'coleman' ? 5 : 3;
+      return `
+        <div class="rounded-[14px] border px-5 py-5 max-w-[900px]" style="border-color: var(--rule); background: var(--surface);">
+          <div class="text-[16px] font-semibold">Waiting on Shepley · day ${q.days}</div>
+          <p class="text-[14.5px] mt-1.5 leading-[1.6]" style="color: var(--ink-2);">We asked for ${rows} groups. When their quote lands in your inbox, I'll check it line by line against what we sent and flag anything they missed, changed or didn't price, before you order.</p>
+          <div class="flex flex-wrap gap-2 mt-4">
+            <button onclick="setQrTab('package')" class="pressable btn-secondary text-[13.5px] font-medium px-4 py-2 rounded-full">See what we sent</button>
+            <button onclick="showToast('Follow-up drafted to Team Pina')" class="pressable btn-secondary text-[13.5px] font-medium px-4 py-2 rounded-full">Nudge Team Pina</button>
+          </div>
+        </div>`;
+    }
+    const look = SAIDNAWEY_CHECK.filter(needsLook).length;
+    const matches = SAIDNAWEY_CHECK.filter(r => r.result === 'match').length;
+    const added = SAIDNAWEY_CHECK.filter(r => r.result === 'added').length;
+    const shown = SAIDNAWEY_CHECK.map((r, i) => [r, i]).filter(([r]) => checkFilter === 'all' || (checkFilter === 'look' ? needsLook(r) : !needsLook(r)))
+      .sort((a, b) => needsLook(b[0]) - needsLook(a[0]));
+    const chip = (k, l) => `<button onclick="setCheckFilter('${k}')" class="tab-pill ${checkFilter === k ? 'is-active' : ''} px-3.5 py-1.5 rounded-[9px] text-[13.5px] whitespace-nowrap">${l}</button>`;
+    return `
+      <div class="rounded-[14px] px-5 py-4 mb-5 max-w-[900px] text-[15px] leading-[1.6]" style="background: var(--sidebar); color: var(--ink-2);">
+        <strong style="color: var(--ink);">What this is:</strong> I put everything we asked Shepley for next to what their quote actually has, so nothing gets missed before you order. We asked for ${SAIDNAWEY_CHECK.length} items. <strong style="color: var(--ink);">${matches} match</strong>, ${added} has something Shepley added, and <strong style="color: var(--accent);">${look} need a fix</strong>.
+        <div class="text-[13.5px] mt-1.5" style="color: var(--ink-muted);">Quote 0002860097 expires Oct 4. <a class="underline decoration-dotted cursor-pointer" onclick="showToast('Reminder set for Oct 1: lock in Shepley pricing')">Remind me Oct 1</a></div>
+      </div>
+      <div class="flex items-center gap-1 p-1 rounded-[12px] mb-4 w-fit max-w-full overflow-x-auto scroll-hide" style="background: var(--sidebar);">
+        ${chip('look', `Needs a fix · ${look}`)}${chip('ok', `Looks right · ${SAIDNAWEY_CHECK.length - look}`)}${chip('all', 'All')}
+      </div>
+      <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
+        <div class="hidden md:grid grid-cols-[1fr_1fr_150px] gap-4 px-5 py-3 border-b text-[13px] font-medium" style="border-color: var(--rule); color: var(--ink-muted);"><div>What we asked for</div><div>What Shepley sent back</div><div class="text-right">Result</div></div>
+        ${shown.map(([r, i], k) => `
+          <div data-check="${i}" class="px-5 py-4 ${k ? 'border-t' : ''}" style="border-color: var(--rule);">
+            <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr_150px] gap-2 md:gap-4">
+              <div><div class="text-[14.5px] font-medium">${r.asked}</div><div class="text-[13px] mt-0.5" style="color: var(--ink-2);">${r.askedSpec}${r.sheets && r.sheets !== '—' ? ` <span class="mono text-[12px]" style="color: var(--ink-muted);">· Sh. ${r.sheets}</span>` : ''}</div></div>
+              <div class="text-[13.5px]" style="color: var(--ink-2);">${r.back}</div>
+              <div class="md:text-right"><span class="badge ${CHECK_RESULT[r.result][0]}">${CHECK_RESULT[r.result][1]}</span></div>
+            </div>
+            ${r.why || r.action ? `<div class="mt-2.5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              ${r.why ? `<div class="flex-1 text-[13.5px] leading-[1.55]" style="color: var(--ink-2);">${r.why}</div>` : '<div class="flex-1"></div>'}
+              ${r.action ? `<button onclick="checkAction(${i})" class="pressable btn-secondary text-[13px] font-medium px-3.5 py-1.5 rounded-full shrink-0 self-start sm:self-center">${r.action}</button>` : ''}
+            </div>` : ''}
+          </div>`).join('')}
+      </div>`;
+  }
   function toggleDeltaNote(tr) { const n = tr.querySelector('.delta-note'); if (n) n.classList.toggle('hidden'); }
 
   function renderQrFlags() {
@@ -1570,13 +1657,13 @@
     if (!v) return;
     if (qrState.view === 'detail') {
       const q = QUOTE_REQUESTS.find(x => x.id === qrState.id);
-      if (/flag|miss|wrong|problem/.test(v) && q.id === 'saidnawey') return setQrTab('flags');
+      if (/flag|miss|wrong|problem|check|accura|sent/.test(v) && q.sent) return setQrTab('check');
       if (/compare|differ|estimate/.test(v) && q.status === 'received') return setQrTab('compare');
       if (/follow|nudge|remind|email|pina/.test(v)) return showToast('Follow-up drafted to Team Pina');
       if (/send/.test(v) && !q.sent) return sendQr(q.id);
       return showToast(`Noted on ${q.job}. In the full build I'd answer from the quote and plans`);
     }
-    if (/saidnawey|hedge/.test(v)) return openQuoteRequest('saidnawey', 'compare');
+    if (/saidnawey|hedge/.test(v)) return openQuoteRequest('saidnawey', 'check');
     if (/whitcomb/.test(v)) return openQuoteRequest('whitcomb');
     if (/plan|upload|new|sunroom|lindqvist/.test(v)) return newQuoteRequest();
     showToast('In the full build, this answers from your Shepley history');
