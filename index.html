@@ -1025,6 +1025,32 @@
         { t: 'Drywall', sub: 'Mashpee Drywall', prefilled: 10, total: 11, status: 'draft' },
       ],
     },
+    {
+      id: 'saidnawey', job: 'Saidnawey Residence', client: 'The Saidnaweys', addr: '33 Hedge Row, West Yarmouth',
+      summary: 'New build: 3 floors plus basement, gambrel roof, white cedar shingles, front porch and balcony. Shepley has quoted the materials. Now each sub prices their labor from the same plans.',
+      source: 'Shepley project + ArchiPlicity plans (13 sheets) + Shepley quote 0002860097',
+      due: 'Ready for you to review', created: 'Today', cameFrom: 'Shepley project',
+      notes: {
+        title: 'From the Shepley check',
+        items: [
+          ['Windows', 'Not in Shepley\'s quote, so Coastal Windows & Doors is asked to price the Andersen 400s'],
+          ['Metal roof', '55 sf on the porch was "by others." Added to the roofing scope'],
+          ['Brackets', '2 entry-hood brackets weren\'t priced. Added to the trim scope'],
+        ],
+      },
+      trades: [
+        { t: 'Excavation & foundation', sub: 'Barnstable Site Works', status: 'draft' },
+        { t: 'Framing', sub: 'Mullen crew (in-house)', status: 'inhouse' },
+        { t: 'Roofing', sub: 'Tidewater Roofing', status: 'draft' },
+        { t: 'Windows & doors', sub: 'Coastal Windows & Doors', status: 'draft' },
+        { t: 'Exterior trim & siding', sub: 'Wianno Finish Carpentry', status: 'draft' },
+        { t: 'Electrical', sub: 'Crocker Electric', status: 'draft' },
+        { t: 'Plumbing', sub: 'Nauset Plumbing & Heating', status: 'draft' },
+        { t: 'HVAC', sub: 'Sandwich Mechanical', status: 'draft' },
+        { t: 'Insulation', sub: 'Bayside Insulation', status: 'draft' },
+        { t: 'Drywall', sub: 'Mashpee Drywall', status: 'draft' },
+      ],
+    },
   ];
 
   // Pre-filled electrical scope, as the sub sees it
@@ -1342,7 +1368,7 @@
   function openQuoteRequest(id, tab) {
     showApp('qr-view');
     const qr = QUOTE_REQUESTS.find(q => q.id === id);
-    qrState = { view: 'detail', id, tab: tab || (qr && qr.status !== 'draft' && qr.status !== 'building' ? 'check' : 'package') };
+    qrState = { view: 'detail', id, tab: tab || 'check' };
     renderQr();
   }
   function qrBack() {
@@ -1356,99 +1382,111 @@
     return `<span class="badge b-accent">Draft · ready to send</span>`;
   }
 
-  function qrStages(q) {
-    const at = q.status === 'received' ? 3 : q.status === 'waiting' ? 2 : q.status === 'draft' ? 1 : 0;
-    const names = ['Plans in', 'Sent', 'Back', 'Checked'];
-    const done = q.id === 'saidnawey' ? 4 : at;
-    return `<div class="flex items-center gap-1">${names.map((n, i) => `<div class="flex flex-col items-start" style="width: 64px;"><div class="h-1.5 w-full rounded-full" style="background: ${i < done ? 'var(--green)' : i === done ? 'var(--amber)' : 'var(--rule)'};"></div><div class="text-[11.5px] mt-1" style="color: ${i < done ? 'var(--ink-2)' : 'var(--ink-muted)'};">${n}</div></div>`).join('')}</div>`;
+  // What went to Shepley, what came back, what needs a look: one line each
+  function qrSentText(q) {
+    if (!q.sent) return q.status === 'building' ? 'Reading the plans…' : 'Ready, not sent yet';
+    return `Plans (${q.sheets} sheets) + scope sheet`;
   }
-  function qrCheckCell(q) {
-    if (q.id === 'saidnawey') return `<span class="badge b-red">${SAIDNAWEY_CHECK.filter(needsLook).length} to fix</span>`;
-    if (q.status === 'waiting') return `<span class="text-[13px]" style="color: var(--ink-muted);">When it comes back</span>`;
-    return `<span class="text-[13px]" style="color: var(--ink-muted);">—</span>`;
+  function qrBackText(q) {
+    if (q.status === 'received') return `Quote · ${usd0(q.shepleyTotal)}`;
+    if (q.status === 'waiting') return 'Nothing yet';
+    return '—';
+  }
+  function qrReviewCell(q) {
+    if (q.id === 'saidnawey') { const n = SAIDNAWEY_CHECK.filter(needsLook).length; return `<span class="font-semibold" style="color: var(--accent);">${n} items</span>`; }
+    if (q.status === 'waiting') return `<span style="color: var(--ink-muted);">When it's back</span>`;
+    return `<span style="color: var(--ink-muted);">—</span>`;
   }
   function renderQr() {
-    $('qr-back-label').textContent = qrState.view === 'detail' ? 'All requests' : 'Back';
+    $('qr-back-label').textContent = qrState.view === 'detail' ? 'All projects' : 'Back';
     $('qr-chat-input').placeholder = qrState.view === 'detail' ? 'Ask about this quote, or have me follow up with Team Pina…' : 'Drop a plan set, or ask about a quote…';
     if (qrState.view === 'detail') return renderQrDetail();
-    const waiting = QUOTE_REQUESTS.filter(q => q.status === 'waiting').length;
+    const sub = t => `<div class="text-[13px] mt-0.5" style="color: var(--ink-muted);">${t}</div>`;
     $('qr-body').innerHTML = `
-      <div class="max-w-[1200px] mx-auto">
-        <div class="mb-5">
-          <div class="text-[24px] font-semibold leading-tight">Shepley Quote Requests</div>
-          <div class="text-[14px] mt-1 leading-[1.55] max-w-[780px]" style="color: var(--ink-2);"><span style="color: var(--ink); font-weight: 600;">What it does:</span> Turns an architect's plan set into a complete takeoff request for Shepley, in the groups they quote in. When their quote comes back, it checks it line by line against what you asked for and flags anything missed, changed or not priced.</div>
-        </div>
-        <p class="mb-8 max-w-[880px] text-[18px] md:text-[19px] leading-[1.65]" style="color: var(--ink-2);">
-          You have <span class="num">${QUOTE_REQUESTS.length} projects</span> with Shepley. They've sent back <span class="num filter-link" onclick="openQuoteRequest('saidnawey','check')">1</span> (Saidnawey), and I checked it against what we asked for: <span class="num filter-link" onclick="openQuoteRequest('saidnawey','check')">${SAIDNAWEY_CHECK.filter(needsLook).length} things to fix</span>. <span class="num">${waiting}</span> are still waiting.
-        </p>
+      <div class="max-w-[1100px] mx-auto">
+        <div class="text-[24px] font-semibold leading-tight">Shepley projects</div>
+        <div class="text-[15px] mt-1 mb-7" style="color: var(--ink-2);">What we sent Shepley, what they sent back, and what needs your review.</div>
         <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
           <table class="w-full text-[15px] hidden md:table">
             <thead><tr class="border-b text-[13px] font-medium" style="border-color: var(--rule); color: var(--ink-muted);">
-              <th class="text-left px-5 py-3.5">Project</th><th class="text-left px-5 py-3.5">Plans</th><th class="text-left px-5 py-3.5">Where it's at</th><th class="text-left px-5 py-3.5">Quote check</th><th class="text-right px-5 py-3.5">Shepley quote</th>
+              <th class="text-left px-5 py-3">Project</th><th class="text-left px-5 py-3">Sent to Shepley</th><th class="text-left px-5 py-3">Sent back</th><th class="text-left px-5 py-3">Needs review</th>
             </tr></thead>
             <tbody>${QUOTE_REQUESTS.map(q => `
               <tr data-qr="${q.id}" class="row border-t cursor-pointer" style="border-color: var(--rule);" onclick="openQuoteRequest('${q.id}')">
-                <td class="px-5 py-4"><div class="font-medium">${q.job}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${q.addr}</div></td>
-                <td class="px-5 py-4 text-[14px]"><div>${q.scope}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${q.sheets} sheets · ${q.architect}</div></td>
-                <td class="px-5 py-4"><div class="mb-1.5">${qrStages(q)}</div><div class="text-[12.5px]" style="color: var(--ink-muted);">${q.status === 'received' ? 'Sent ' + q.sent + ' · back ' + q.returned : q.status === 'waiting' ? 'Sent ' + q.sent + ' · day ' + q.days : q.status === 'draft' ? 'Ready to send' : 'Reading plans…'}</div></td>
-                <td class="px-5 py-4">${qrCheckCell(q)}</td>
-                <td class="px-5 py-4 text-right mono text-[14px]">${q.shepleyTotal ? usd0(q.shepleyTotal) : '<span style="color: var(--ink-muted);">pending</span>'}</td>
+                <td class="px-5 py-4"><div class="font-medium">${q.job}</div>${sub(q.addr)}</td>
+                <td class="px-5 py-4"><div>${qrSentText(q)}</div>${q.sent ? sub(q.sent) : ''}</td>
+                <td class="px-5 py-4"><div>${qrBackText(q)}</div>${q.status === 'received' ? sub(q.returned) : q.status === 'waiting' ? sub('Day ' + q.days) : ''}</td>
+                <td class="px-5 py-4">${qrReviewCell(q)}</td>
               </tr>`).join('')}</tbody>
           </table>
           <div class="md:hidden">${QUOTE_REQUESTS.map((q, i) => `
-            <div data-qr="${q.id}" class="px-4 py-4 cursor-pointer active:bg-[var(--hover)] ${i ? 'border-t' : ''}" style="border-color: var(--rule);" onclick="openQuoteRequest('${q.id}')">
-              <div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-medium">${q.job}</div><div class="text-[13px] mt-1" style="color: var(--ink-muted);">${q.addr}</div></div>${qrStatusBadge(q)}</div>
-              <div class="mt-3">${qrStages(q)}</div>${q.id === 'saidnawey' ? `<div class="mt-2">${qrCheckCell(q)}</div>` : ''}
+            <div data-qr="${q.id}" class="px-4 py-4 cursor-pointer ${i ? 'border-t' : ''}" style="border-color: var(--rule);" onclick="openQuoteRequest('${q.id}')">
+              <div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="font-medium">${q.job}</div>${sub(q.addr)}</div><div class="text-[14px] shrink-0">${qrReviewCell(q)}</div></div>
+              <div class="text-[13px] mt-2" style="color: var(--ink-2);">Sent: ${qrSentText(q)}${q.sent ? ' · ' + q.sent : ''}<br/>Back: ${qrBackText(q)}${q.status === 'received' ? ' · ' + q.returned : ''}</div>
             </div>`).join('')}</div>
         </div>
       </div>`;
   }
 
-  function setQrTab(tab) { qrState.tab = tab; renderQrDetail(); }
+  function setQrTab(tab) { qrState.tab = tab; renderQrDetail(); $('qr-body').scrollTop = 0; }
 
   function renderQrDetail() {
     const q = QUOTE_REQUESTS.find(x => x.id === qrState.id);
     if (!q) return;
     const isS = q.id === 'saidnawey';
-    const tabs = [];
-    if (q.sent) tabs.push(['check', isS ? `Sent vs. what came back · ${SAIDNAWEY_CHECK.filter(needsLook).length} to fix` : 'Sent vs. what came back']);
-    tabs.push(['package', 'What we sent']);
-    if (q.status === 'received') tabs.push(['compare', 'Shepley vs. estimate']);
-    if (!tabs.find(t => t[0] === qrState.tab)) qrState.tab = 'package';
+    const back = `<button onclick="setQrTab('check')" class="text-[14px] mb-5 hover:underline" style="color: var(--ink-2);">← ${q.job}</button>`;
+    if (qrState.tab === 'package') { $('qr-body').innerHTML = `<div class="max-w-[1100px] mx-auto">${back}${renderQrPackage(q)}</div>`; return; }
+    if (qrState.tab === 'compare' && q.status === 'received') { $('qr-body').innerHTML = `<div class="max-w-[1100px] mx-auto">${back}${renderQrCompare()}</div>`; return; }
+    if (qrState.tab === 'all' && isS) { checkFilter = 'all'; $('qr-body').innerHTML = `<div class="max-w-[1100px] mx-auto">${back}${renderQrCheck(q)}</div>`; return; }
+    qrState.tab = 'check';
 
-    let content = '';
-    if (qrState.tab === 'package') content = renderQrPackage(q);
-    if (qrState.tab === 'compare') content = renderQrCompare();
-    if (qrState.tab === 'check') content = renderQrCheck(q);
+    const section = (label, body) => `
+      <div class="section-label mt-8 mb-2">${label}</div>
+      <div class="rounded-[14px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">${body}</div>`;
+    const link = (tab, text) => `<button onclick="setQrTab('${tab}')" class="text-[14px] hover:underline" style="color: var(--accent);">${text}</button>`;
+    const look = isS ? SAIDNAWEY_CHECK.map((r, i) => [r, i]).filter(([r]) => needsLook(r)) : [];
 
-    const timeline = q.status === 'received'
-      ? `Progress set dated <strong>8/16</strong> · Shepley's quote dated <strong>Sep 4</strong>`
+    const sentBody = q.sent
+      ? `<div class="px-5 py-4"><div class="text-[15px]">${q.planSet} <span style="color: var(--ink-muted);">· ${q.sheets} sheets</span></div>
+           <div class="text-[14px] mt-1" style="color: var(--ink-2);">Plus a scope sheet listing ${isS ? 'all 21 groups' : 'every group'}, with specs and sheet numbers. Sent to Team Pina on ${q.sent}.</div>
+           <div class="mt-3">${link('package', 'See what we sent →')}</div></div>`
+      : `<div class="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3"><div class="flex-1 text-[15px]" style="color: var(--ink-2);">${q.status === 'building' ? 'Reading the plans…' : 'The request is ready. Nothing has gone to Shepley yet.'}</div>
+           ${q.status === 'draft' ? `<button onclick="setQrTab('package')" class="pressable btn-secondary text-[14px] font-medium px-4 py-2 rounded-full shrink-0">Review and send</button>` : ''}</div>`;
+
+    const backBody = q.status === 'received'
+      ? `<div class="px-5 py-4"><div class="text-[15px]">Quote 0002860097 + door quote 2859245 · <span class="font-semibold">${usd0(q.shepleyTotal)}</span> <span style="color: var(--ink-muted);">incl. tax</span></div>
+           <div class="text-[14px] mt-1" style="color: var(--ink-2);">Came back ${q.returned}. Good until Oct 4.</div>
+           <div class="mt-3">${link('compare', 'Compare with our estimate →')}</div></div>`
       : q.status === 'waiting'
-        ? `Estimate ready ${q.sent} · Shepley on <strong>day ${q.days}</strong> · <a class="underline decoration-dotted cursor-pointer" onclick="showToast('Follow-up drafted to Team Pina')">nudge Team Pina</a>`
-        : `Estimate ready · not sent to Shepley yet`;
+        ? `<div class="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3"><div class="flex-1 text-[15px]" style="color: var(--ink-2);">Nothing yet. Day ${q.days} of waiting.</div><button onclick="showToast('Follow-up drafted to Team Pina')" class="pressable btn-secondary text-[14px] font-medium px-4 py-2 rounded-full shrink-0">Nudge Team Pina</button></div>`
+        : `<div class="px-5 py-4 text-[15px]" style="color: var(--ink-muted);">—</div>`;
+
+    const reviewBody = isS
+      ? look.map(([r, i], k) => `
+          <div data-check="${i}" class="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 ${k ? 'border-t' : ''}" style="border-color: var(--rule);">
+            <div class="flex-1 min-w-0">
+              <div class="text-[15px] font-medium">${r.asked} <span class="badge ${CHECK_RESULT[r.result][0]} ml-1">${CHECK_RESULT[r.result][1]}</span></div>
+              <div class="text-[14px] mt-1 leading-[1.5]" style="color: var(--ink-2);">${r.why}</div>
+            </div>
+            <button onclick="checkAction(${i})" class="pressable btn-secondary text-[13.5px] font-medium px-4 py-2 rounded-full shrink-0 self-start sm:self-center">${r.action}</button>
+          </div>`).join('') + `<div class="px-5 py-3 border-t text-[14px] flex items-center justify-between gap-3" style="border-color: var(--rule); background: var(--bg); color: var(--ink-muted);"><span>The other ${SAIDNAWEY_CHECK.length - look.length} lines look right.</span>${link('all', 'See every line →')}</div>`
+      : `<div class="px-5 py-4 text-[15px]" style="color: var(--ink-2);">${q.sent ? 'When their quote comes back, I\'ll check every line against what we sent and list anything missed, changed or not priced here.' : 'Nothing to review until Shepley sends a quote back.'}</div>`;
 
     $('qr-body').innerHTML = `
-      <div class="max-w-[1200px] mx-auto">
-        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-2">
-          <div class="min-w-0">
-            <div class="text-[24px] font-semibold leading-tight">${q.job}</div>
-            <div class="text-[14px] mt-1" style="color: var(--ink-muted);">${q.addr} · ${q.scope}</div>
+      <div class="max-w-[900px] mx-auto">
+        <div class="text-[24px] font-semibold leading-tight">${q.job}</div>
+        <div class="text-[14px] mt-1" style="color: var(--ink-muted);">${q.addr} · ${q.scope}</div>
+        ${section('What we sent Shepley', sentBody)}
+        ${section('What they sent back', backBody)}
+        ${section(isS ? `Needs review · ${look.length}` : 'Needs review', reviewBody)}
+        ${isS ? `
+        <div class="mt-8 rounded-[14px] px-5 py-5 flex flex-col sm:flex-row sm:items-center gap-4" style="background: var(--sidebar);">
+          <div class="flex-1">
+            <div class="text-[16px] font-semibold">Next: send to subcontractors</div>
+            <div class="text-[14px] mt-1 leading-[1.55]" style="color: var(--ink-2);">Shepley covered the materials. Get labor prices from your subs on the same plans. The missing windows, metal roof and brackets are already in their scopes.</div>
           </div>
-          <div class="shrink-0">${qrStatusBadge(q)}</div>
-        </div>
-        <div class="text-[14px] mb-6 [&_strong]:text-[var(--ink)] [&_strong]:font-semibold" style="color: var(--ink-2);">${timeline}</div>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-7">
-          ${statCard('Estimate', usd0(q.aiTotal), 'example · materials before tax')}
-          ${statCard('Shepley quote', q.shepleyTotal ? usd0(q.shepleyTotal) : 'Pending', q.shepleyTotal ? 'incl. ext doors + tax' : 'Team Pina · Hyannis')}
-          ${statCard(isS ? 'Plans → quote' : 'Plan sheets', isS ? '8/18 → 9/4' : q.sheets, isS ? 'progress set to Shepley quote' : q.planSet)}
-          ${statCard(isS ? 'To fix' : 'Shepley', isS ? String(SAIDNAWEY_CHECK.filter(needsLook).length) : (q.status === 'waiting' ? 'Day ' + q.days : 'Not sent'), isS ? 'missed or off-spec in the quote' : 'Team Pina · Hyannis')}
-        </div>
-
-        <div class="flex items-center gap-1 p-1 rounded-[12px] mb-5 w-fit max-w-full overflow-x-auto scroll-hide" style="background: var(--sidebar);">
-          ${tabs.map(([k, l]) => `<button data-qrtab="${k}" onclick="setQrTab('${k}')" class="tab-pill ${qrState.tab === k ? 'is-active' : ''} px-4 py-1.5 rounded-[9px] text-[14px] whitespace-nowrap">${l}</button>`).join('')}
-        </div>
-        ${content}
+          <button data-tosubs onclick="openScopeApp('saidnawey')" class="pressable btn-primary text-[15px] font-medium px-5 py-2.5 rounded-full shrink-0">Send to subcontractors</button>
+        </div>` : ''}
       </div>`;
   }
 
@@ -1772,6 +1810,16 @@
     'Radiant floor': 'Electric radiant floor under tile, about 280 sf',
   };
   const JOB_WHAT = { liu: { 'Roofing': 'Raise the garage roof to match the house, Landmark in Weathered Wood', 'Electrical': 'Price a 200A panel upgrade, plus circuits and lights for the suite', 'Plumbing': 'Full bath over the garage, run supply and drain through the garage below', 'HVAC (mini-split)': 'Two mini-split heads: bedroom and bonus room' },
+                     saidnawey: {
+                       'Excavation & foundation': 'Full basement: dig, footings, poured walls, Bilco door and 4 window wells (sheet 6)',
+                       'Roofing': 'Install the Landmark Pro gambrel roof (Shepley supplies it), plus the 55 sf metal porch roof',
+                       'Windows & doors': 'Price the Andersen 400 windows, schedule A–K on sheet 3. Not in Shepley\'s quote',
+                       'Exterior trim & siding': 'Install Azek trim and white cedar shingles, and make the 2 entry-hood brackets',
+                       'Electrical': 'Whole house: service, circuits and lighting for 3 floors plus basement',
+                       'Plumbing': '4 baths, kitchen and laundry, per sheets 1–2',
+                       'HVAC': 'Heating and cooling for 3 floors plus basement',
+                       'Insulation': 'Walls, attic and basement to code',
+                       'Drywall': 'Hang, tape and finish all 3 floors' },
                      lindqvist: { 'Roofing': 'Cathedral roof tied into the existing hip roof, flash 3 skylights', 'Electrical': 'Recessed lights, outlets, radiant-floor thermostat and circuit', 'Insulation': 'Spray foam in the cathedral ceiling, insulate the floor over the piers' } };
   // Doug's bench: the subs he uses for each trade. The usual one is picked by default.
   const SUB_BENCH = [
@@ -1785,6 +1833,7 @@
     [/drywall/i, ['Mashpee Drywall', 'Centerville Drywall']],
     [/tile/i, ['Wianno Tile', 'Cotuit Tile & Stone']],
     [/window/i, ['Coastal Windows & Doors', 'Harbor Glass & Windows']],
+    [/trim/i, ['Wianno Finish Carpentry', 'Cotuit Trim Co.']],
     [/counter/i, ['Cape Stone Works', 'Seaside Surfaces']],
   ];
   function benchFor(t) {
@@ -1812,7 +1861,7 @@
     const inHouse = job.trades.filter(t => t.status === 'inhouse').map(t => t.t.toLowerCase());
     const isSent = Object.keys(sent).length > 0;
     const bids = Object.values(sent).filter(v => v.state === 'bid');
-    const who = job.client.split(' & ')[0].split(' ')[0] === job.client.split(' ')[0] ? 'The ' + job.client.split(' ').pop() + 's' : job.client;
+    const who = /^The /.test(job.client) ? job.client : 'The ' + job.client.split(' ').pop() + 's';
     const status = i => {
       const st = sent[i];
       if (!st) return '';
@@ -1833,7 +1882,7 @@
         <div class="rounded-[14px] px-5 py-4 mt-5 text-[15px] leading-[1.6]" style="background: var(--hover); color: var(--ink-2);">
           ${isSent
             ? `<strong style="color: var(--ink);">Out for pricing.</strong> Each sub got a text and email with their part of the job. Their prices come back here${bids.length ? `, and <strong style="color: var(--ink);">${bids.length} ${bids.length > 1 ? 'are' : 'is'} in so far (${usd0(bids.reduce((a, v) => a + v.bid, 0))})</strong>` : ''}.`
-            : `<strong style="color: var(--ink);">What this is:</strong> ${who} asked for this project. To get it priced, I wrote up the part each of your subs would do, so they can send you a number. Now pick which subs get a bid request. Your usual sub for each trade is already picked. Tap another to get a second price, then send.`}
+            : `<strong style="color: var(--ink);">What this is:</strong> ${job.cameFrom === 'Shepley project' ? 'Shepley has quoted the materials. To price the labor, I wrote up the part each of your subs would do from the same plans.' : `${who} asked for this project. To get it priced, I wrote up the part each of your subs would do, so they can send you a number.`} Now pick which subs get a bid request. Your usual sub for each trade is already picked. Tap another to get a second price, then send.`}
         </div>
 
         <div class="section-label mt-8 mb-2">The request</div>
@@ -1875,7 +1924,7 @@
         <div class="mt-6 flex flex-col md:flex-row md:items-center gap-3">
           <button id="scope-send" onclick="sendScopesNow()" class="pressable btn-primary w-full md:w-auto text-[16px] font-medium px-7 py-3.5 rounded-full flex items-center justify-center gap-2" ${nPicked ? '' : 'disabled style="opacity: .5"'}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
-            Send ${nPicked} bid request${nPicked === 1 ? '' : 's'}</button>
+            Review emails and send (${nPicked})</button>
           <div class="text-[13px]" style="color: var(--ink-muted);">Each sub gets a text and an email with their part and a link to send back a price.</div>
         </div>`}
       </div>`;
@@ -1883,9 +1932,17 @@
   function toggleScopeTrade(i, on) { const job = scopeJob(); picksFor(job)[i] = new Set(on ? [job.trades[i].sub] : []); renderScope(); }
 
   // Send: each sub flips to Sent, then a couple open it and one bid comes in, to show the idea
-  function sendScopesNow() {
+  function sendScopesNow(confirmed) {
     const job = scopeJob();
     if (Object.keys(sentFor(job)).length) return;
+    if (!confirmed) {
+      const list = [];
+      Object.keys(picksFor(job)).map(Number).sort((a, b) => a - b).forEach(i => picksFor(job)[i].forEach(n => list.push([i, n])));
+      if (!list.length) return;
+      emailQueue = list;
+      return openEmailPreview(job, list, 0);
+    }
+    emailQueue = null;
     const chosen = picksFor(job);
     const picks = Object.keys(chosen).map(Number).filter(i => chosen[i].size).sort((a, b) => a - b);
     if (!picks.length) return;
@@ -1913,26 +1970,71 @@
     ];
   }
 
+  // Email preview: exactly what a sub receives. Used for "View scope" and before sending.
+  let emailQueue = null; // [[tradeIndex, subName]] when previewing before a send
   function previewSubView(scopeId, i) {
-    const s = SCOPES.find(x => x.id === scopeId); const t = s.trades[i];
-    const isElec = /electric/i.test(t.t) && s.id === 'whitcomb';
-    const filled = isElec ? ELECTRICAL_SCOPE.filled : genericTradeFields(s, t);
-    const open = isElec ? ELECTRICAL_SCOPE.open : ['Anything in the plans that doesn\'t work for your trade?', 'Your price, and how long it\'s good for', 'Earliest start date'];
-    $('modal-card').style.maxWidth = '440px';
+    const job = SCOPES.find(x => x.id === scopeId);
+    const set = picksFor(job)[i];
+    const names = job.sentSubs ? sentSubsFor(job, i) : (set && set.size ? [...set] : [job.trades[i].sub]);
+    emailQueue = null;
+    openEmailPreview(job, names.map(n => [i, n]), 0);
+  }
+  function openEmailPreview(job, list, idx) {
+    const [i, name] = list[idx], t = job.trades[i];
+    const town = job.addr.split(', ').pop();
+    const sending = !!emailQueue;
+    const bullets = job.id === 'whitcomb' && /electric/i.test(t.t)
+      ? ELECTRICAL_SCOPE.filled.slice(1, 7).map(([k, v]) => `<strong>${k}:</strong> ${v}`)
+      : [whatFor(job, t), 'Quantities and locations are on the attached plans', 'Mullen standard specs apply. Anything different is called out on the sheets', 'Tell us anything in the plans that doesn\'t work for your trade'];
+    $('modal-card').style.maxWidth = '680px';
     $('modal-card').innerHTML = `
-      <div class="px-5 pt-5 pb-4 border-b flex items-start justify-between gap-3" style="border-color: var(--rule);">
-        <div><div class="text-[12.5px]" style="color: var(--ink-muted);">This is what ${t.sub} gets on their phone</div><div class="text-[18px] font-semibold mt-1">${t.t}: price request</div><div class="text-[13px] mt-0.5" style="color: var(--ink-muted);">Mullen Building · ${s.job}</div></div>
-        <button onclick="closeModal()" class="pressable p-2 rounded-full -m-1" style="color: var(--ink-muted);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <div class="px-5 pt-5 pb-4 border-b" style="border-color: var(--rule);">
+        <div class="flex items-start justify-between gap-3">
+          <div><div class="text-[18px] font-semibold">${sending ? 'Check the emails, then send' : 'Email preview'}</div>
+            <div class="text-[13px] mt-0.5" style="color: var(--ink-muted);">${sending ? `${list.length} subs each get their own email with their part of the job.` : 'This is what the sub gets.'}</div></div>
+          <button onclick="closeModal()" class="pressable p-2 rounded-full -m-1" style="color: var(--ink-muted);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        ${list.length > 1 ? `<select id="email-pick" onchange="openEmailPreview(SCOPES.find(x => x.id === '${job.id}'), window.__emailList, +this.value)" class="mt-3 w-full rounded-[10px] border px-3 py-2 text-[14px]" style="border-color: var(--rule); background: #fff;">
+          ${list.map(([ti, n], k) => `<option value="${k}" ${k === idx ? 'selected' : ''}>${n} · ${job.trades[ti].t}</option>`).join('')}</select>` : ''}
       </div>
-      <div class="flex-1 overflow-y-auto scroll-hide px-5 py-4 space-y-4">
-        <div class="rounded-[12px] px-3.5 py-3 text-[13.5px]" style="background: var(--accent-soft); color: var(--accent-deep);">Hi, it's Doug at Mullen. Here's the ${t.t.toLowerCase()} work for the ${s.client ? s.client.split(' ').pop() + 's\' ' + s.job.split(' ').slice(1).join(' ').toLowerCase() : s.job}. We've written up what we know. Check it, answer ${open.length} quick questions, and send us your price.</div>
-        <div class="space-y-1.5">${filled.slice(0, 6).map(([k, v]) => `<div class="flex gap-2.5 text-[13.5px] leading-[1.45]"><span class="mt-0.5 shrink-0" style="color: var(--green);">${ICON.check}</span><div><span class="font-medium">${k}:</span> <span style="color: var(--ink-2);">${v}</span></div></div>`).join('')}
-          <div class="text-[12.5px] pl-6" style="color: var(--ink-muted);">+ ${Math.max(0, filled.length - 6)} more · tap to edit anything that's wrong</div></div>
-        ${open.map((q, k) => `<div><div class="text-[13.5px] font-medium mb-1.5">${k + 1}. ${q}</div>${/price/i.test(q) ? `<div class="flex items-center gap-2 rounded-[10px] border px-3 py-2.5" style="border-color: var(--rule); background: #fff;"><span style="color: var(--ink-muted);">$</span><input class="flex-1 bg-transparent outline-none text-[14px] mono" placeholder="0.00" /></div>` : `<textarea rows="2" class="w-full rounded-[10px] border px-3 py-2 text-[14px] outline-none resize-none" style="border-color: var(--rule); background: #fff;" placeholder="Type or tap the mic…"></textarea>`}</div>`).join('')}
+      <div class="flex-1 overflow-y-auto px-4 md:px-6 py-5" style="background: #EEEBE6;">
+        <div class="text-[13px] mb-3 space-y-0.5" style="color: #5A554E;">
+          <div><span style="color: #8A847B;">From:</span> Doug Mullen, Mullen Building &amp; Remodeling</div>
+          <div><span style="color: #8A847B;">To:</span> ${name}</div>
+          <div><span style="color: #8A847B;">Subject:</span> <strong style="color: #1F1F1F;">Bid request: ${t.t}, ${job.job} (${town})</strong></div>
+        </div>
+        <div id="email-html" style="background: #fff; border-radius: 6px; overflow: hidden; font-family: Georgia, 'Times New Roman', serif; color: #1F1F1F; box-shadow: 0 1px 3px rgba(0,0,0,.08);">
+          <div style="background: #1F1F1F; padding: 18px 24px; border-bottom: 3px solid #8E120A;">
+            <div style="color: #fff; letter-spacing: .18em; font-size: 17px;">MULLEN <span style="opacity: .7;">BUILDING</span></div>
+          </div>
+          <div style="padding: 24px; font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.6;">
+            <p style="margin: 0 0 14px;">Hi ${name.split(' ')[0]} team,</p>
+            <p style="margin: 0 0 18px;">We're pricing a project in ${town} and would like your number for the ${t.t.toLowerCase()} work. Everything we know is below and in the attached plans.</p>
+            <div style="background: #F6F4F1; border-radius: 6px; padding: 14px 16px; margin-bottom: 20px;">
+              <div style="font-weight: 700;">${job.job}</div>
+              <div style="color: #6B665F; font-size: 14px;">${job.addr}</div>
+              <div style="font-size: 14px; margin-top: 6px;">${job.summary.split('. ')[0]}.</div>
+            </div>
+            <div style="font-weight: 700; margin-bottom: 6px;">Your scope: ${t.t}</div>
+            <ul style="margin: 0 0 20px; padding-left: 20px;">${bullets.map(b => `<li style="margin-bottom: 4px;">${b}</li>`).join('')}</ul>
+            <div style="font-size: 14px; color: #6B665F; margin-bottom: 22px;">📎 ${job.id === 'saidnawey' ? 'Saidnawey_Progress_Binder_8.18.26.pdf' : job.job.split(' ')[0] + '_Plans.pdf'} &nbsp;·&nbsp; 📎 ${t.t.split(' ')[0]}_Scope.pdf</div>
+            <div style="text-align: center; margin-bottom: 22px;">
+              <a onclick="showToast('Opens a simple page where the sub types a price (preview)')" style="display: inline-block; background: #8E120A; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 4px; font-weight: 700; cursor: pointer;">Send us your price</a>
+              <div style="font-size: 13px; color: #6B665F; margin-top: 8px;">Please reply within 7 days.</div>
+            </div>
+            <p style="margin: 0;">Questions? Reply to this email or call me at 508-737-3249.</p>
+            <p style="margin: 12px 0 0;">Thanks,<br/>Doug Mullen</p>
+          </div>
+          <div style="background: #F6F4F1; padding: 14px 24px; font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #8A847B;">Mullen Building &amp; Remodeling · 23 West Bay Rd, Suite A, Osterville, MA 02655</div>
+        </div>
       </div>
-      <div class="px-5 py-4 border-t" style="border-color: var(--rule); background: var(--bg);">
-        <button onclick="closeModal(); showToast('Bid submitted (preview)')" class="pressable btn-primary w-full text-[15px] font-medium px-4 py-3 rounded-full">Submit bid to Mullen</button>
+      <div class="px-5 py-4 border-t flex items-center justify-end gap-2" style="border-color: var(--rule); background: var(--bg);">
+        ${sending
+          ? `<button onclick="closeModal()" class="pressable btn-secondary text-[14px] font-medium px-4 py-2.5 rounded-full">Back</button>
+             <button id="email-send" onclick="closeModal(); sendScopesNow(true)" class="pressable btn-primary text-[15px] font-medium px-5 py-2.5 rounded-full">Send ${list.length} bid request${list.length === 1 ? '' : 's'}</button>`
+          : `<button onclick="closeModal()" class="pressable btn-secondary text-[14px] font-medium px-5 py-2.5 rounded-full">Close</button>`}
       </div>`;
+    window.__emailList = list;
     $('modal').classList.remove('hidden');
   }
 
