@@ -1676,7 +1676,6 @@
   // A customer asks for a project (like an addition); the agent writes a scope for each trade and gets it ready to send.
   let scopeView = 'list', scopeJobId = 'whitcomb', scopeBuilding = false;
   const scopeSent = {};    // jobId → { tradeIndex: { state: 'sent' | 'viewed' | 'bid', bid } }
-  const scopeChecked = {}; // jobId → Set of trade indexes to send to
   const scopeJob = () => SCOPES.find(x => x.id === scopeJobId);
   const subTrades = job => job.trades.map((t, i) => [t, i]).filter(([t]) => t.status !== 'inhouse');
   function sentFor(job) {
@@ -1774,13 +1773,42 @@
   };
   const JOB_WHAT = { liu: { 'Roofing': 'Raise the garage roof to match the house, Landmark in Weathered Wood', 'Electrical': 'Price a 200A panel upgrade, plus circuits and lights for the suite', 'Plumbing': 'Full bath over the garage, run supply and drain through the garage below', 'HVAC (mini-split)': 'Two mini-split heads: bedroom and bonus room' },
                      lindqvist: { 'Roofing': 'Cathedral roof tied into the existing hip roof, flash 3 skylights', 'Electrical': 'Recessed lights, outlets, radiant-floor thermostat and circuit', 'Insulation': 'Spray foam in the cathedral ceiling, insulate the floor over the piers' } };
+  // Doug's bench: the subs he uses for each trade. The usual one is picked by default.
+  const SUB_BENCH = [
+    [/excavat|foundation|pier/i, ['Barnstable Site Works', 'Cotuit Excavating', 'Harbor Foundations']],
+    [/structural/i, ['Cape Structural Engineering', 'Bayview Engineering']],
+    [/roof/i, ['Tidewater Roofing', 'Harbor Roofing', 'Seabrook Roofing']],
+    [/electric/i, ['Crocker Electric', 'Osterville Electric', 'Shoreline Electrical']],
+    [/plumb|radiant/i, ['Nauset Plumbing & Heating', 'Marstons Mills Plumbing', 'Harbor Mechanical']],
+    [/hvac|mini-split/i, ['Sandwich Mechanical', 'Harbor Mechanical', 'Coastal Comfort HVAC']],
+    [/insulat/i, ['Bayside Insulation', 'Cape Foam & Insulation']],
+    [/drywall/i, ['Mashpee Drywall', 'Centerville Drywall']],
+    [/tile/i, ['Wianno Tile', 'Cotuit Tile & Stone']],
+    [/window/i, ['Coastal Windows & Doors', 'Harbor Glass & Windows']],
+    [/counter/i, ['Cape Stone Works', 'Seaside Surfaces']],
+  ];
+  function benchFor(t) {
+    const hit = SUB_BENCH.find(([re]) => re.test(t.t));
+    return [t.sub, ...((hit && hit[1]) || []).filter(n => n !== t.sub)];
+  }
+  const scopePicks = {}; // jobId → { tradeIndex: Set of sub names }
+  function picksFor(job) {
+    if (!scopePicks[job.id]) { scopePicks[job.id] = {}; subTrades(job).forEach(([t, i]) => scopePicks[job.id][i] = new Set([t.sub])); }
+    return scopePicks[job.id];
+  }
+  const sentSubsFor = (job, i) => job.sentSubs ? (job.sentSubs[i] || []) : [job.trades[i].sub];
+  const pickCount = job => Object.values(picksFor(job)).reduce((a, set) => a + set.size, 0);
+  function toggleSubPick(i, k) {
+    const job = scopeJob(), set = picksFor(job)[i], name = benchFor(job.trades[i])[k];
+    set.has(name) ? set.delete(name) : set.add(name);
+    renderScope();
+  }
   const whatFor = (job, t) => (JOB_WHAT[job.id] || {})[t.t] || SCOPE_WHAT[t.t] || '';
 
   function renderScopeJob() {
     const job = scopeJob();
     const sent = sentFor(job);
-    if (!scopeChecked[job.id]) scopeChecked[job.id] = new Set(subTrades(job).map(([, i]) => i));
-    const checked = scopeChecked[job.id];
+    const picks = picksFor(job), nPicked = pickCount(job);
     const inHouse = job.trades.filter(t => t.status === 'inhouse').map(t => t.t.toLowerCase());
     const isSent = Object.keys(sent).length > 0;
     const bids = Object.values(sent).filter(v => v.state === 'bid');
@@ -1805,7 +1833,7 @@
         <div class="rounded-[14px] px-5 py-4 mt-5 text-[15px] leading-[1.6]" style="background: var(--hover); color: var(--ink-2);">
           ${isSent
             ? `<strong style="color: var(--ink);">Out for pricing.</strong> Each sub got a text and email with their part of the job. Their prices come back here${bids.length ? `, and <strong style="color: var(--ink);">${bids.length} ${bids.length > 1 ? 'are' : 'is'} in so far (${usd0(bids.reduce((a, v) => a + v.bid, 0))})</strong>` : ''}.`
-            : `<strong style="color: var(--ink);">What this is:</strong> ${who} asked for this project. To get it priced, I wrote up the part each of your subs would do, so they can send you a number. Look it over, untick anyone you don't want to ask, then send.`}
+            : `<strong style="color: var(--ink);">What this is:</strong> ${who} asked for this project. To get it priced, I wrote up the part each of your subs would do, so they can send you a number. Now pick which subs get a bid request. Your usual sub for each trade is already picked. Tap another to get a second price, then send.`}
         </div>
 
         <div class="section-label mt-8 mb-2">The request</div>
@@ -1819,17 +1847,21 @@
           </div>` : ''}
         </div>
 
-        <div class="section-label mt-8 mb-2">What each sub will be asked to price</div>
+        <div class="section-label mt-8 mb-1">${isSent ? 'Who was asked to price what' : 'Review subcontractors'}</div>
+        ${isSent ? '' : `<div class="text-[14px] mb-3" style="color: var(--ink-2);">Pick who gets a bid request for each trade.</div>`}
         <div class="rounded-[16px] border overflow-hidden" style="border-color: var(--rule); background: var(--surface);">
           ${subTrades(job).map(([t, i], k) => `
-            <div class="flex items-start gap-3 md:gap-4 px-4 md:px-5 py-4 ${k ? 'border-t' : ''}" style="border-color: var(--rule);">
-              <input type="checkbox" ${checked.has(i) || sent[i] ? 'checked' : ''} ${isSent ? 'disabled' : ''} onchange="toggleScopeTrade(${i}, this.checked)" class="w-5 h-5 shrink-0 mt-0.5" style="accent-color: var(--accent);" title="Send to ${t.sub}" />
+            <div data-trade="${i}" class="flex items-start gap-3 md:gap-4 px-4 md:px-5 py-4 ${k ? 'border-t' : ''}" style="border-color: var(--rule);${!isSent && !picks[i].size ? ' opacity: .6;' : ''}">
               <div class="min-w-0 flex-1">
-                <div class="text-[15px]"><span class="font-semibold">${t.t}</span> <span style="color: var(--ink-muted);">· ${t.sub}</span></div>
+                <div class="text-[15px]"><span class="font-semibold">${t.t}</span></div>
                 <div class="text-[14px] mt-1 leading-[1.5]" style="color: var(--ink-2);">${whatFor(job, t)}</div>
+                ${isSent ? `<div class="mt-2.5 space-y-1.5">${sentSubsFor(job, i).length ? sentSubsFor(job, i).map((n, b) => `<div class="flex items-center gap-2 text-[14px]"><span style="color: var(--ink);">${n}</span>${b === 0 ? status(i) : `<span class="badge b-muted">Sent ✓</span>`}</div>`).join('') : `<div class="text-[13.5px]" style="color: var(--ink-muted);">Not sent to anyone</div>`}</div>` : ''}
+                ${isSent ? '' : `<div class="flex flex-wrap items-center gap-2 mt-3">
+                  ${benchFor(t).map((n, b) => { const on = picks[i].has(n); return `<button data-sub="${i}-${b}" onclick="toggleSubPick(${i}, ${b})" class="pressable inline-flex items-center gap-1.5 text-[13.5px] px-3 py-1.5 rounded-full border" style="${on ? 'background: var(--accent); border-color: var(--accent); color: #fff;' : 'background: #fff; border-color: var(--rule); color: var(--ink-2);'}">${on ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'}${n}${b === 0 ? `<span class="text-[11.5px]" style="opacity: .75;">· usual</span>` : ''}</button>`; }).join('')}
+                  ${picks[i].size ? '' : `<span class="text-[13px]" style="color: var(--ink-muted);">Not asking anyone for this one</span>`}
+                </div>`}
               </div>
               <div class="shrink-0 flex flex-col md:flex-row items-end md:items-center gap-1.5 md:gap-2">
-                ${status(i)}
                 <button data-preview="${i}" onclick="previewSubView('${job.id}', ${i})" class="pressable btn-ghost text-[13px] font-medium px-3 py-1.5 rounded-full whitespace-nowrap" style="color: var(--accent);">See their scope</button>
               </div>
             </div>`).join('')}
@@ -1838,30 +1870,32 @@
 
         ${isSent ? '' : `
         <div class="mt-6 flex flex-col md:flex-row md:items-center gap-3">
-          <button id="scope-send" onclick="sendScopesNow()" class="pressable btn-primary w-full md:w-auto text-[16px] font-medium px-7 py-3.5 rounded-full flex items-center justify-center gap-2" ${checked.size ? '' : 'disabled style="opacity: .5"'}>
+          <button id="scope-send" onclick="sendScopesNow()" class="pressable btn-primary w-full md:w-auto text-[16px] font-medium px-7 py-3.5 rounded-full flex items-center justify-center gap-2" ${nPicked ? '' : 'disabled style="opacity: .5"'}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
-            Send to ${checked.size} sub${checked.size === 1 ? '' : 's'}</button>
-          <div class="text-[13px]" style="color: var(--ink-muted);">Each gets a text and an email with their part and a link to send back a price.</div>
+            Send ${nPicked} bid request${nPicked === 1 ? '' : 's'}</button>
+          <div class="text-[13px]" style="color: var(--ink-muted);">Each sub gets a text and an email with their part and a link to send back a price.</div>
         </div>`}
       </div>`;
   }
-  function toggleScopeTrade(i, on) { const c = scopeChecked[scopeJobId]; on ? c.add(i) : c.delete(i); renderScope(); }
+  function toggleScopeTrade(i, on) { const job = scopeJob(); picksFor(job)[i] = new Set(on ? [job.trades[i].sub] : []); renderScope(); }
 
   // Send: each sub flips to Sent, then a couple open it and one bid comes in, to show the idea
   function sendScopesNow() {
     const job = scopeJob();
     if (Object.keys(sentFor(job)).length) return;
-    if (!scopeChecked[job.id]) scopeChecked[job.id] = new Set(subTrades(job).map(([, i]) => i));
-    const picks = [...scopeChecked[job.id]].sort((a, b) => a - b);
+    const chosen = picksFor(job);
+    const picks = Object.keys(chosen).map(Number).filter(i => chosen[i].size).sort((a, b) => a - b);
     if (!picks.length) return;
+    const n = pickCount(job);
     job.sentOn = 'today';
+    job.sentSubs = {}; picks.forEach(i => job.sentSubs[i] = [...chosen[i]]);
     const live = () => scopeJobId === job.id && !$('scope-view').classList.contains('hidden');
     picks.forEach((i, k) => setTimeout(() => { scopeSent[job.id][i] = { state: 'sent' }; if (live()) renderScope(); }, 120 * k));
     const after = (ms, fn) => setTimeout(() => { fn(); if (live()) renderScope(); }, ms);
     const roof = picks.find(i => /roof/i.test(job.trades[i].t)), elec = picks.find(i => /electric/i.test(job.trades[i].t));
     if (roof != null) { after(1800, () => { scopeSent[job.id][roof] = { state: 'viewed' }; }); after(3600, () => { scopeSent[job.id][roof] = { state: 'bid', bid: 21400 }; }); }
     if (elec != null) after(2600, () => { scopeSent[job.id][elec] = { state: 'viewed' }; });
-    showToast(`Scopes sent to ${picks.length} subs by text + email`);
+    showToast(`Bid requests sent to ${n} subs by text + email`);
   }
 
   function genericTradeFields(s, t) {
@@ -1941,7 +1975,7 @@
     if (scopeView === 'detail') {
       const job = scopeJob(), t = v.toLowerCase(), sent = Object.keys(sentFor(job)).length;
       const trade = subTrades(job).find(([tr]) => t.includes(tr.t.toLowerCase().split(/[ (&]/)[0]) || t.includes(tr.sub.toLowerCase().split(' ')[0]));
-      if (!sent && trade && /(skip|remove|don'?t|leave out|without|uncheck)/.test(t)) { toggleScopeTrade(trade[1], false); return showToast(`Took ${trade[0].sub} off this one`); }
+      if (!sent && trade && /(skip|remove|don'?t|leave out|without|uncheck)/.test(t)) { toggleScopeTrade(trade[1], false); return showToast(`Not asking anyone for ${trade[0].t.toLowerCase()} on this one`); }
       if (!sent && trade && /(add|include|back)/.test(t)) { toggleScopeTrade(trade[1], true); return showToast(`Added ${trade[0].sub} back`); }
       if (!sent && /\bsend\b/.test(t)) return sendScopesNow();
       if (trade && /(bid|price|quote)/.test(t)) { const st = sentFor(job)[trade[1]]; return showToast(st && st.bid ? `${trade[0].sub} bid ${usd0(st.bid)}` : `No bid from ${trade[0].sub} yet. Want me to nudge them?`); }
